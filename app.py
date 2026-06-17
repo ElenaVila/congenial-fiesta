@@ -6,9 +6,9 @@ from datetime import datetime
 import pandas as pd
 
 # =========================================================================
-# 1. IDENTIDAD VISUAL INSTITUCIONAL Y CONFIGURACIÓN GENERAL
+# 1. ESTILO LIMPIO Y PROFESIONAL DE AULA VIRTUAL
 # =========================================================================
-st.set_page_config(page_title="Campus Escolar - Aula Virtual", layout="wide")
+st.set_page_config(page_title="Aula Virtual - Campus Escolar", layout="wide")
 
 st.markdown("""
     <style>
@@ -52,7 +52,7 @@ REPOSITORIO_GIT = "congenial-fiesta"
 RAMA = "MATEMATICAS"
 TOKEN_GITHUB = st.secrets["TOKEN_GITHUB"]
 
-# Base de datos local de alumnos integrada para el Login (Puedes ampliarla como quieras)
+# Base de datos local de alumnos integrada para el Login
 DB_USUARIOS = {
     "alumno1": {"clave": "mates123", "nombre": "Juan Pérez"},
     "alumno2": {"clave": "mates456", "nombre": "Ana Gómez"},
@@ -61,7 +61,7 @@ DB_USUARIOS = {
 }
 
 # =========================================================================
-# 2. MAQUINARIA DE COMUNICACIÓN CON LA API DE GITHUB
+# 2. CORE: SISTEMA DE COMUNICACIÓN CON LA API DE GITHUB
 # =========================================================================
 def api_git(ruta="", metodo="GET", datos=None):
     url = f"https://api.github.com/repos/{USUARIO_GIT}/{REPOSITORIO_GIT}/contents/{ruta}?ref={RAMA}"
@@ -95,7 +95,7 @@ if "curso_activo" not in st.session_state:
     st.session_state["curso_activo"] = None
 
 # =========================================================================
-# 3. CONTROL DE ACCESO GLOBAL: LOGIN PROFESIONAL CON CREDENCIALES
+# 3. CONTROL DE ACCESO: LOGIN
 # =========================================================================
 st.sidebar.markdown("<h2 style='color:#1e3a8a; font-weight:700;'>🔑 Control de Accesos</h2>", unsafe_allow_html=True)
 
@@ -111,9 +111,9 @@ if st.session_state["usuario_identificado"] is None:
                 st.sidebar.success(f"Bienvenido/a, {DB_USUARIOS[input_user]['nombre']}")
                 st.rerun()
             else:
-                st.sidebar.error("Credenciales inválidas o no registradas.")
+                st.sidebar.error("Credenciales incorrectas.")
 else:
-    st.sidebar.info(f"Sesión activa: \n**{DB_USUARIOS[st.session_state['usuario_identificado']]['nombre']}**")
+    st.sidebar.info(f"Sesión activa:\n**{DB_USUARIOS[st.session_state['usuario_identificado']]['nombre']}**")
     if st.sidebar.button("🔒 Cerrar Sesión"):
         st.session_state["usuario_identificado"] = None
         st.session_state["curso_activo"] = None
@@ -125,24 +125,23 @@ else:
 user_sesion = st.session_state["usuario_identificado"]
 
 if user_sesion is None:
-    # --- PANTALLA DE BIENVENIDA SI NO HAY LOGIN ---
     st.markdown("<h1 class='main-title'>🏫 Bienvenido al Campus Escolar Digital</h1>", unsafe_allow_html=True)
-    st.info("Por favor, inicia sesión en el panel de la barra lateral izquierda introduciendo tus credenciales oficiales para desbloquear el aula virtual, el calendario y tus asignaturas.")
+    st.info("Por favor, inicia sesión en la barra lateral para acceder a la plataforma.")
 
 # -------------------------------------------------------------------------
-# ROL DOCENTE: PANEL DE ADMINISTRACIÓN TOTAL (ELENA)
+# ROL DOCENTE: PANEL DE GESTIÓN (ADMIN)
 # -------------------------------------------------------------------------
 elif user_sesion == "admin":
-    st.markdown(f"<h1 class='main-title'>👩‍🏫 Despacho de Dirección y Gestión Académica</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-title'>👩‍🏫 Panel de Control Docente</h1>", unsafe_allow_html=True)
     st.write("---")
     
     modulo = st.selectbox("Módulo a gestionar:", [
-        "📥 CUADERNO DE CALIFICACIONES (Corregir entregas y mandar Feedback)",
+        "📥 CUADERNO DE CALIFICACIONES (Corregir entregas)",
         "🛠️ CREAR TEMAS Y SUBIR MATERIALES",
         "🏫 ALTA DE ASIGNATURAS CON PORTADA"
     ])
     
-    if modulo == "🛠️ CREAR TEMAS Y SUBIR RECURSOS ACADÉMICOS" or modulo == "🛠️ CREAR TEMAS Y SUBIR MATERIALES":
+    if "CREAR TEMAS" in modulo:
         asig_list = listar_directorios()
         if asig_list:
             asig_sel = st.selectbox("Asignatura:", asig_list)
@@ -167,7 +166,7 @@ elif user_sesion == "admin":
                         ruta_completa = f"{asig_sel}/{tema_ruta_final}/{nombre_archivo_git}"
                         
                         if enviar_archivo(f"{asig_sel}/{tema_ruta_final}/.gitkeep", b"", "Init") and enviar_archivo(ruta_completa, fichero_p.getvalue(), "Carga"):
-                            st.success(f"✔️ ¡Proceso completado! Tarea subida con éxito.")
+                            st.success("✔️ Tarea subida con éxito.")
                             st.rerun()
                 else:
                     fichero_p = st.file_uploader("Adjunta los apuntes o guías académicas:", key="u_mat_doc")
@@ -176,10 +175,10 @@ elif user_sesion == "admin":
                         ruta_completa = f"{asig_sel}/{tema_ruta_final}/{nombre_archivo_git}"
                         
                         if enviar_archivo(f"{asig_sel}/{tema_ruta_final}/.gitkeep", b"", "Init") and enviar_archivo(ruta_completa, fichero_p.getvalue(), "Carga"):
-                            st.success(f"✔️ ¡Proceso completado! Material subido con éxito.")
+                            st.success("✔️ Material subido con éxito.")
                             st.rerun()
                             
-    elif modulo == "📥 CUADERNO DE CALIFICACIONES (Corregir entregas y mandar Feedback)":
+    elif "CUADERNO" in modulo:
         asig_list = listar_directorios()
         if asig_list:
             asig_eval = st.selectbox("Selecciona Asignatura para corregir:", asig_list)
@@ -192,49 +191,52 @@ elif user_sesion == "admin":
                 id_alumnos = [a["name"] for a in alumnos_lista if a["type"] == "dir"]
                 
                 if id_alumnos:
-                    # Mostrar nombres de la base de datos para mapear los IDs de usuario limpia
+                    # CORRECCIÓN AL KEYERROR: Verificamos de forma segura si el UID existe en nuestra DB de usuarios
                     opciones_combo = {uid: DB_USUARIOS[uid]["nombre"] for uid in id_alumnos if uid in DB_USUARIOS}
-                    alumno_eval_uid = st.selectbox("Selecciona el alumno a evaluar:", list(opciones_combo.keys()), format_func=lambda x: opciones_combo[x])
                     
-                    archivos_f = api_git(f"Entregas_Globales/{asig_eval}/{tarea_eval}/{alumno_eval_uid}")
-                    url_doc, name_doc = "", ""
-                    for f in archivos_f:
-                        if f["name"] != "nota.json":
-                            url_doc, name_doc = f["download_url"], f["name"]
-                            
-                    ruta_json_nota = f"Entregas_Globales/{asig_eval}/{tarea_eval}/{alumno_eval_uid}/nota.json"
-                    meta_n = api_git(ruta_json_nota)
-                    nota_v, feedback_v = "Sin calificar", ""
-                    
-                    if isinstance(meta_n, dict) and "download_url" in meta_n:
-                        res_d = requests.get(meta_n["download_url"])
-                        if res_d.status_code == 200:
-                            nota_v = res_d.json().get("nota", "Sin calificar")
-                            feedback_v = res_d.json().get("feedback", "")
-                            
-                    st.markdown(f"""
-                        <div style='background-color:#ffffff; border:1px solid #dadce0; padding:20px; border-radius:12px; margin-bottom:15px;'>
-                            👤 <b>Estudiante:</b> {opciones_combo[alumno_eval_uid]} <br>
-                            📄 <b>Archivo enviado:</b> {name_doc} <br><br>
-                            <a href='{url_doc}' target='_blank'>📥 Descargar trabajo entregado</a>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    input_n = st.text_input("Calificación oficial:", value=str(nota_v))
-                    input_f = st.text_area("Feedback pedagógico (Comentarios para el alumno):", value=feedback_v)
-                    
-                    if st.button("💾 Publicar e indexar Nota en su boletín"):
-                        nueva_data = {"nota": input_n, "feedback": input_f, "fecha_correccion": datetime.now().strftime("%d/%m/%Y")}
-                        if enviar_archivo(ruta_json_nota, json.dumps(nueva_data).encode("utf-8"), "Nota"):
-                            st.success(f"✔️ Calificación para {opciones_combo[alumno_eval_uid]} guardada.")
-                            st.rerun()
+                    if opciones_combo:
+                        alumno_eval_uid = st.selectbox("Selecciona el alumno a evaluar:", list(opciones_combo.keys()), format_func=lambda x: opciones_combo[x])
+                        
+                        archivos_f = api_git(f"Entregas_Globales/{asig_eval}/{tarea_eval}/{alumno_eval_uid}")
+                        url_doc, name_doc = "", ""
+                        for f in archivos_f:
+                            if f["name"] != "nota.json":
+                                url_doc, name_doc = f["download_url"], f["name"]
+                                
+                        ruta_json_nota = f"Entregas_Globales/{asig_eval}/{tarea_eval}/{alumno_eval_uid}/nota.json"
+                        meta_n = api_git(ruta_json_nota)
+                        nota_v, feedback_v = "Sin calificar", ""
+                        
+                        if isinstance(meta_n, dict) and "download_url" in meta_n:
+                            res_d = requests.get(meta_n["download_url"])
+                            if res_d.status_code == 200:
+                                nota_v = res_d.json().get("nota", "Sin calificar")
+                                feedback_v = res_d.json().get("feedback", "")
+                                
+                        st.markdown(f"""
+                            <div style='background-color:#ffffff; border:1px solid #dadce0; padding:20px; border-radius:12px; margin-bottom:15px;'>
+                                👤 <b>Estudiante:</b> {opciones_combo[alumno_eval_uid]} <br>
+                                📄 <b>Archivo enviado:</b> {name_doc} <br><br>
+                                <a href='{url_doc}' target='_blank'>📥 Descargar trabajo entregado</a>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        input_n = st.text_input("Calificación oficial:", value=str(nota_v))
+                        input_f = st.text_area("Feedback pedagógico:", value=feedback_v)
+                        
+                        if st.button("💾 Publicar Nota"):
+                            nueva_data = {"nota": input_n, "feedback": input_f, "fecha_correccion": datetime.now().strftime("%d/%m/%Y")}
+                            if enviar_archivo(ruta_json_nota, json.dumps(nueva_data).encode("utf-8"), "Nota"):
+                                st.success("✔️ Calificación guardada.")
+                                st.rerun()
+                    else:
+                        st.warning("⚠️ Las carpetas encontradas no corresponden a alumnos registrados en la base de datos.")
                 else:
-                    st.info("No hay entregas registradas para esta tarea.")
+                    st.info("Aún no se registran entregas de ningún alumno para esta actividad.")
             else:
-                st.info("No se han enviado tareas en esta materia todavía.")
+                st.info("Bandeja vacía. Ningún alumno ha enviado archivos en esta materia todavía.")
                 
-    elif modulo == "AQUÍ_PONDREMOS_TU_OPCION" or modulo == "AQUÍ_PONDREMOS_TU_OPCION_2" or "PORTADA" in modulo:
-        st.subheader("Alta de Clases")
+    elif "PORTADA" in modulo:
         nueva_asig = st.text_input("Nombre de la nueva Asignatura:")
         imagen_portada = st.file_uploader("Sube una imagen de portada (.png o .jpg):", type=["png", "jpg", "jpeg"])
         
@@ -243,11 +245,11 @@ elif user_sesion == "admin":
                 clean_asig = nueva_asig.strip().replace(" ", "_")
                 extension = imagen_portada.name.split(".")[-1]
                 if enviar_archivo(f"{clean_asig}/.gitkeep", b"", "Alta") and enviar_archivo(f"{clean_asig}/portada_curso.{extension}", imagen_portada.getvalue(), "Portada"):
-                    st.success(f"✔️ Asignatura '{nueva_asig}' creada correctamente.")
+                    st.success(f"✔️ Asignatura '{nueva_asig}' creada correctamente con su portada.")
                     st.rerun()
 
 # -------------------------------------------------------------------------
-# ROL ALUMNO: INTERFAZ SEGURA COMPLETA (JUAN, ANA, CARLOS...)
+# ROL ALUMNO: ACCESO SEGURO Y COMPLETO (JUAN, ANA, CARLOS...)
 # -------------------------------------------------------------------------
 else:
     nombre_pantalla_alumno = DB_USUARIOS[user_sesion]["nombre"]
@@ -258,7 +260,6 @@ else:
         "📊 Mi Boletín y Correcciones"
     ])
     
-    # --- PESTAÑA 1: RECURSOS Y BLOQUEO DE ENVÍOS ÚNICOS ---
     with pestana_clases:
         if st.session_state["curso_activo"] is None:
             st.markdown(f"<h1 class='main-title'>📚 Mis Cursos Activos — Hola, {nombre_pantalla_alumno}</h1>", unsafe_allow_html=True)
@@ -283,7 +284,7 @@ else:
                                 st.session_state["curso_activo"] = asig
                                 st.rerun()
             else:
-                st.info("No hay asignaturas disponibles.")
+                st.info("No hay asignaturas disponibles en el aula virtual.")
         else:
             asig_actual = st.session_state["curso_activo"]
             if st.button("⬅️ Volver a mis asignaturas"):
@@ -314,34 +315,32 @@ else:
                                             <span style='background-color:#ef4444; color:white; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;'>TAREA OBLIGATORIA</span>
                                             <h4 style='margin:5px 0;'>📋 {t_nombre}</h4>
                                             <p style='margin:0; font-size:13px; color:#5f6368;'>Fecha límite: <b>{f_limite}</b></p>
-                                            <p style='margin-top:5px;'><a href='{el['download_url']}' target='_blank' style='color:#ef4444; font-weight:bold;'>📥 Descargar Enunciado de la Actividad</a></p>
+                                            <p style='margin-top:5px;'><a href='{el['download_url']}' target='_blank' style='color:#ef4444; font-weight:bold;'>📥 Descargar Enunciado</a></p>
                                         </div>
                                     """, unsafe_allow_html=True)
                                     
-                                    # --- SISTEMA DE VERIFICACIÓN DE ENTREGA ÚNICA ---
+                                    # --- RESTRICCIÓN DE ENVÍOS ÚNICOS ---
                                     ruta_json_comprobar = f"Entregas_Globales/{asig_actual}/{id_tar}/{user_sesion}/nota.json"
                                     ya_entregado = api_git(ruta_json_comprobar)
                                     
                                     if isinstance(ya_entregado, dict) and "download_url" in ya_entregado:
-                                        # SI YA EXISTE ENTREGA: Bloqueamos formulario y mostramos mensaje inalterable
                                         st.markdown(f"""
                                             <div class='status-entregado'>
-                                                ✔️ Tarea entregada con éxito. Ya no se permiten más envíos para esta actividad.
+                                                ✔️ Tarea entregada correctamente. Ya no se permiten más re-envíos para esta actividad.
                                             </div>
                                         """, unsafe_allow_html=True)
                                     else:
-                                        # SI NO EXISTE ENTREGA: Permitimos el envío normal
                                         with st.container(border=True):
                                             st.write("📬 **Formulario de entrega oficial:**")
-                                            archivo_al = st.file_uploader("Selecciona tu archivo de solución (PDF o Imagen):", type=["pdf","png","jpg","jpeg"], key=f"f_u_{el['name']}")
+                                            archivo_al = st.file_uploader("Selecciona tu archivo (PDF o Imagen):", type=["pdf","png","jpg","jpeg"], key=f"f_u_{el['name']}")
                                             
                                             if st.button("Enviar Tarea", key=f"b_s_{el['name']}"):
                                                 if archivo_al:
                                                     ruta_file = f"Entregas_Globales/{asig_actual}/{id_tar}/{user_sesion}/{archivo_al.name}"
-                                                    meta_init = {"nota": "Sin calificar", "feedback": "Pendiente de revisión por la profesora.", "fecha": datetime.now().strftime("%d/%m/%Y")}
+                                                    meta_init = {"nota": "Sin calificar", "feedback": "Pendiente de revisión.", "fecha": datetime.now().strftime("%d/%m/%Y")}
                                                     
                                                     if enviar_archivo(ruta_file, archivo_al.getvalue(), "Entrega") and enviar_archivo(ruta_json_comprobar, json.dumps(meta_init).encode("utf-8"), "Meta"):
-                                                        st.success("✔️ Tarea enviada y registrada correctamente.")
+                                                        st.success("✔️ Tarea enviada correctamente.")
                                                         st.rerun()
                                                 else:
                                                     st.warning("Adjunta un documento.")
@@ -357,9 +356,9 @@ else:
             else:
                 st.info("No hay temas creados.")
 
-    # --- PESTAÑA 2: CALENDARIO ESCOLAR CENTRALIZADO EN REJILLA ---
+    # --- PESTAÑA 2: AGENDA EN CUADRÍCULA ---
     with pestana_calendario:
-        st.markdown("<h3 style='color:#1e3a8a;'>📅 Agenda Automatizada de Entregas</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:#1e3a8a;'>📅 Agenda de Entregas</h3>", unsafe_allow_html=True)
         todas_asig = listar_directorios()
         datos_cal = []
         
@@ -380,17 +379,16 @@ else:
         else:
             st.info("No hay plazos agendados.")
 
-    # --- PESTAÑA 3: BOLETÍN PRIVADO AUTOMÁTICO TRAS EL LOGIN ---
+    # --- PESTAÑA 3: EXPEDIENTE ESCOLAR PRIVADO ---
     with pestana_boletin:
         st.markdown(f"<h3 style='color:#1e3a8a;'>📋 Expediente y Notas de {nombre_pantalla_alumno}</h3>", unsafe_allow_html=True)
-        st.write("Historial oficial de evaluaciones cargadas de forma privada por tu profesora:")
+        st.write("Historial oficial de evaluaciones cargadas de forma privada:")
         st.write("---")
         
         asignaturas_totales = listar_directorios()
         hubo_registros = False
         
         for asig in asignaturas_totales:
-            # Buscamos en la bandeja si este alumno tiene notas de esa asignatura
             entregas_asig = api_git(f"Entregas_Globales/{asig}")
             if isinstance(entregas_asig, list):
                 for task_folder in entregas_asig:
@@ -409,7 +407,6 @@ else:
                                     <h4 style='margin:0; color:#1e3a8a;'>📚 {asig.replace('_',' ')} — Actividad: {nombre_t_limpio}</h4>
                                     <p style='margin:8px 0 4px 0;'><b>Nota Oficial:</b> <span style='font-size:16px; color:#16a34a; font-weight:700;'>{data_nota['nota']}</span></p>
                                     <p style='margin:0; color:#475569;'><b>Comentarios y Feedback Docente:</b><br><i>{data_nota['feedback']}</i></p>
-                                    <small style='color:#94a3b8;'>Fecha de corrección: {data_nota.get('fecha_correccion', data_nota.get('fecha'))}</small>
                                 </div>
                             """, unsafe_allow_html=True)
         if not hubo_registros:
