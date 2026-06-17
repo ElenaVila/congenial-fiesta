@@ -1,274 +1,417 @@
 import streamlit as st
 import requests
 import base64
+import json
 from datetime import datetime
 
-# 1. CONFIGURACIÓN DE PÁGINA Y ESTILOS CSS
-st.set_page_config(page_title="Aula Virtual - Elena Vila", layout="wide")
+# =========================================================================
+# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTILOS CSS PROFESIONALES
+# =========================================================================
+st.set_page_config(page_title="Aula Virtual - Colegio", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
-    .main { background-color: #f3f4f6; }
-    .folder-box {
+    .main { background-color: #f4f6f9; }
+    
+    /* Tarjetas de Asignaturas */
+    .subject-card {
         background-color: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border-top: 6px solid #4f46e5;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .subject-title { color: #1e1b4b; font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+    
+    /* Tablón de Anuncios */
+    .announcement-box {
+        background-color: #eff6ff;
+        border-left: 5px solid #3b82f6;
         padding: 15px;
         border-radius: 8px;
-        border-left: 5px solid #3b82f6;
-        margin-bottom: 10px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
     }
-    .file-box {
+    
+    /* Cajas de Recursos y Estado */
+    .resource-box {
         background-color: #ffffff;
-        padding: 12px 15px;
-        border-radius: 6px;
-        margin-bottom: 8px;
+        padding: 12px 18px;
+        border-radius: 8px;
         border: 1px solid #e5e7eb;
+        margin-bottom: 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
-    .task-box {
-        background-color: #fffbeb;
-        padding: 12px 15px;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        border: 1px solid #fde68a;
+    .feedback-card {
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 10px;
     }
-    .section-title { color: #1e3a8a; font-weight: bold; margin-top: 15px; }
+    .task-submitted {
+        background-color: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-left: 5px solid #f59e0b;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Credenciales seguras
+# Conexión con los Secrets de Streamlit
 USUARIO_GIT = "ElenaVila"
 REPOSITORIO_GIT = "congenial-fiesta"
 RAMA = "MATEMATICAS"
 TOKEN_GITHUB = st.secrets["TOKEN_GITHUB"]
 
-# --- FUNCIONES DE CONEXIÓN CON GITHUB ---
-def obtener_contenido(ruta=""):
+# =========================================================================
+# 2. CORE: FUNCIONES DE COMUNICACIÓN CON LA API DE GITHUB
+# =========================================================================
+def peticion_github(ruta="", metodo="GET", datos=None):
     url = f"https://api.github.com/repos/{USUARIO_GIT}/{REPOSITORIO_GIT}/contents/{ruta}?ref={RAMA}"
-    headers = {"Authorization": f"token {TOKEN_GITHUB}"}
-    r = requests.get(url, headers=headers)
-    return r.json() if r.status_code == 200 else []
+    headers = {
+        "Authorization": f"token {TOKEN_GITHUB}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    if metodo == "GET":
+        r = requests.get(url, headers=headers)
+        return r.json() if r.status_code == 200 else []
+    elif metodo == "PUT":
+        url_put = f"https://api.github.com/repos/{USUARIO_GIT}/{REPOSITORIO_GIT}/contents/{ruta}"
+        r = requests.put(url_put, headers=headers, json=datos)
+        return r.status_code in [200, 201]
+    return []
 
-def subir_a_github(ruta_destino, contenido_bytes, mensaje):
-    url = f"https://api.github.com/repos/{USUARIO_GIT}/{REPOSITORIO_GIT}/contents/{ruta_destino}"
-    headers = {"Authorization": f"token {TOKEN_GITHUB}", "Accept": "application/vnd.github.v3+json"}
+def listar_carpetas_limpias(ruta=""):
+    elementos = peticion_github(ruta)
+    if isinstance(elementos, list):
+        return [item["name"] for item in elementos if item["type"] == "dir" and item["name"] not in ["Tareas_Alumnos", "Anuncios_Sistema"]]
+    return []
+
+def publicar_archivo(ruta_destino, contenido_bytes, mensaje_commit):
     contenido_base64 = base64.b64encode(contenido_bytes).decode("utf-8")
-    
-    datos = {"message": mensaje, "content": contenido_base64, "branch": RAMA}
-    chequeo = requests.get(url + f"?ref={RAMA}", headers=headers)
-    if chequeo.status_code == 200:
-        datos["sha"] = chequeo.json()["sha"]
-        
-    r = requests.put(url, headers=headers, json=datos)
-    return r.status_code in [200, 201]
+    datos = {"message": mensaje_commit, "content": contenido_base64, "branch": RAMA}
+    chequeo = peticion_github(ruta_destino)
+    if isinstance(chequeo, dict) and "sha" in chequeo:
+        datos["sha"] = chequeo["sha"]
+    return peticion_github(ruta_destino, metodo="PUT", datos=datos)
 
-# --- ESTRUCTURA DE PESTAÑAS PRINCIPALES ---
-st.title("🎓 Aula Virtual Integrada")
-pestana_materiales, pestana_entregas, pestana_agenda, pestana_admin = st.tabs([
-    "📚 Materiales de Clase", 
-    "📤 Entrega de Tareas", 
-    "📅 Mi Agenda y Pendientes",
-    "👩‍🏫 Panel de Control (Profesora)"
+# =========================================================================
+# 3. INTERFAZ: MENÚ DE NAVEGACIÓN PRINCIPAL
+# =========================================================================
+st.title("🏫 Centro Educativo Digital - Aula Virtual")
+
+menu_principal = st.sidebar.radio("Navegación del Colegio", [
+    "🏠 Inicio y Tablón de Anuncios",
+    "📚 Mis Asignaturas",
+    "📤 Buzón y Notas de Tareas",
+    "👩‍🏫 Despacho de Profesora (Gestión)"
 ])
 
-# ==========================================
-# PESTAÑA 1: MATERIALES DE CLASE (ALUMNOS)
-# ==========================================
-with pestana_materiales:
-    st.markdown("<h2 class='section-title'>📁 Explorador de Asignaturas y Temas</h2>", unsafe_allow_html=True)
+# -------------------------------------------------------------------------
+# PÁGINA A: INICIO Y TABLÓN DE ANUNCIOS
+# -------------------------------------------------------------------------
+if menu_principal == "🏠 Inicio y Tablón de Anuncios":
+    st.markdown("<h2 style='color:#1e3a8a;'>📣 Tablón de Anuncios del Curso</h2>", unsafe_allow_html=True)
     
-    elementos_raiz = obtener_contenido()
-    # Ocultamos la carpeta de tareas de los alumnos para que ellos no la vean en descargas
-    carpetas = [item["name"] for item in elementos_raiz if item["type"] == "dir" and item["name"] != "Tareas_Alumnos"]
-    
-    if carpetas:
-        carpeta_sel = st.selectbox("Selecciona la Asignatura / Bloque:", carpetas, key="student_folder")
+    anuncios = peticion_github("Anuncios_Sistema")
+    if anuncios and isinstance(anuncios, list):
+        archivos_txt = [f for f in anuncios if f["type"] == "file" and f["name"].endswith(".txt")]
+        archivos_txt.reverse() 
         
-        sub_elementos = obtener_contenido(carpeta_sel)
-        sub_carpetas = [item["name"] for item in sub_elementos if item["type"] == "dir"]
-        archivos_sueltos = [item for item in sub_elementos if item["type"] == "file" and item["name"] != ".gitkeep"]
-        
-        col_izq, col_der = st.columns(2)
-        
-        with col_izq:
-            st.write("📂 **Subcarpetas / Temas disponibles:**")
-            if sub_carpetas:
-                sub_carpeta_sel = st.selectbox("Ver tema:", ["(Ninguno seleccionado)"] + sub_carpetas, key="student_subfolder")
-                if sub_carpeta_sel != "(Ninguno seleccionado)":
-                    archivos_sub = obtener_contenido(f"{carpeta_sel}/{sub_carpeta_sel}")
-                    for f in archivos_sub:
-                        if f["type"] == "file" and f["name"] != ".gitkeep":
-                            st.markdown(f"<div class='file-box'>📄 {f['name']} <a href='{f['download_url']}' target='_blank'>📥 Descargar</a></div>", unsafe_allow_html=True)
-            else:
-                st.info("No hay subcarpetas creadas en este bloque.")
+        for archivo in archivos_txt:
+            contenido_res = requests.get(archivo["download_url"])
+            if contenido_res.status_code == 200:
+                texto_anuncio = contenido_res.text
+                fecha_anuncio = archivo["name"].split("_")[0]
+                titulo_anuncio = archivo["name"].replace(".txt", "").split("_", 1)[1].replace("_", " ")
                 
-        with col_der:
-            st.write("📄 **Archivos generales de este bloque:**")
-            if archivos_sueltos:
-                for f in archivos_sueltos:
-                    st.markdown(f"<div class='file-box'>📄 {f['name']} <a href='{f['download_url']}' target='_blank'>📥 Descargar</a></div>", unsafe_allow_html=True)
-            else:
-                st.info("No hay archivos sueltos en la raíz de esta carpeta.")
+                st.markdown(f"""
+                    <div class='announcement-box'>
+                        <h4 style='margin:0; color:#1d4ed8;'>📌 {titulo_anuncio}</h4>
+                        <small style='color:#6b7280;'>Publicado el: {fecha_anuncio}</small>
+                        <p style='margin-top:10px; color:#374151;'>{texto_anuncio}</p>
+                    </div>
+                """, unsafe_allow_html=True)
     else:
-        st.info("Aún no se han publicado materiales en el aula virtual.")
+        st.info("No hay anuncios publicados en este momento.")
 
-# ==========================================
-# PESTAÑA 2: BUZÓN DE ENTREGAS (ALUMNOS)
-# ==========================================
-with pestana_entregas:
-    st.markdown("<h2 class='section-title'>📤 Entrega de Ejercicios y Tareas</h2>", unsafe_allow_html=True)
-    st.write("Sube aquí tus resoluciones en formato PDF o imagen. Llegarán directamente al panel de la profesora.")
+# -------------------------------------------------------------------------
+# PÁGINA B: EXPLORADOR DE ASIGNATURAS
+# -------------------------------------------------------------------------
+elif menu_principal == "📚 Mis Asignaturas":
+    st.markdown("<h2 style='color:#1e3a8a;'>📚 Tus Asignaturas Disponibles</h2>", unsafe_allow_html=True)
+    asignaturas = listar_carpetas_limpias()
     
-    with st.form("formulario_entrega", clear_on_submit=True):
-        nombre_alumno = st.text_input("Nombre y Apellidos del Alumno:")
-        tarea_nombre = st.text_input("Nombre o Código de la Tarea (Ej: Tarea 1 - Derivadas):")
-        archivo_tarea = st.file_uploader("Adjunta tu documento:", type=["pdf", "docx", "png", "jpg"])
-        boton_entrega = st.form_submit_button("Enviar Tarea a la Profesora")
-        
-        if boton_entrega:
-            if nombre_alumno and tarea_nombre and archivo_tarea:
-                fecha_hoy = datetime.now().strftime("%Y-%m-%d_%H-%M")
-                nombre_limpio_alumno = nombre_alumno.strip().replace(" ", "_")
-                tarea_limpia = tarea_nombre.strip().replace(" ", "_")
+    if asignaturas:
+        if "asignatura_activa" not in st.session_state:
+            st.session_state["asignatura_activa"] = None
+            
+        cols = st.columns(3)
+        for i, asigna in enumerate(asignaturas):
+            with cols[i % 3]:
+                st.markdown(f"<div class='subject-card'><div style='font-size: 40px;'>📘</div><div class='subject-title'>{asigna}</div></div>", unsafe_allow_html=True)
+                if st.button(f"Entrar a {asigna}", key=f"btn_{asigna}"):
+                    st.session_state["asignatura_activa"] = asigna
+                    
+        if st.session_state["asignatura_activa"]:
+            asigna_sel = st.session_state["asignatura_activa"]
+            st.write("---")
+            st.markdown(f"<h3 style='color:#4f46e5;'>📂 Contenidos de: {asigna_sel}</h3>", unsafe_allow_html=True)
+            
+            temas = peticion_github(asigna_sel)
+            subcarpetas_temas = [t["name"] for t in temas if t["type"] == "dir"]
+            archivos_raiz = [t for t in temas if t["type"] == "file" and t["name"] != ".gitkeep"]
+            
+            if subcarpetas_temas:
+                tema_sel = st.selectbox("Seleccionar Bloque o Tema:", subcarpetas_temas)
+                contenido_tema = peticion_github(f"{asigna_sel}/{tema_sel}")
                 
-                # Se guarda de forma organizada: Tareas_Alumnos / Nombre_De_La_Tarea / Alumno_archivo.pdf
-                ruta_entrega = f"Tareas_Alumnos/{tarea_limpia}/{nombre_limpio_alumno}_{fecha_hoy}_{archivo_tarea.name}"
-                
-                exito = subir_a_github(ruta_entrega, archivo_tarea.getvalue(), f"Tarea entregada por {nombre_alumno}")
-                if exito:
-                    st.success("🎉 ¡Tu tarea ha sido entregada correctamente! Tu profesora ya puede verla.")
+                archivos_tema = [f for f in contenido_tema if f["type"] == "file" and f["name"] != ".gitkeep"]
+                if archivos_tema:
+                    for arch in archivos_tema:
+                        st.markdown(f"<div class='resource-box'><span>📝 <b>{arch['name']}</b></span><a href='{arch['download_url']}' target='_blank' style='background-color:#4f46e5; color:white; text-decoration:none; padding:6px 12px; border-radius:4px; font-size:13px;'>📥 Descargar</a></div>", unsafe_allow_html=True)
                 else:
-                    st.error("Hubo un problema al tramitar la entrega. Avisa a tu profesora.")
-            else:
-                st.warning("Por favor, completa todos los campos y adjunta un archivo.")
+                    st.info("Este tema aún no contiene archivos.")
+            
+            if archivos_raiz:
+                st.write("📎 **Documentos Generales:**")
+                for arch in archivos_raiz:
+                    st.markdown(f"<div class='resource-box'><span>📋 {arch['name']}</span><a href='{arch['download_url']}' target='_blank' style='background-color:#4f46e5; color:white; text-decoration:none; padding:6px 12px; border-radius:4px; font-size:13px;'>📥 Descargar</a></div>", unsafe_allow_html=True)
+    else:
+        st.info("No hay asignaturas creadas todavía.")
 
-# ==========================================
-# PESTAÑA 3: AGENDA DEL ESTUDIANTE
-# ==========================================
-with pestana_agenda:
-    st.markdown("<h2 class='section-title'>📅 Planificador y Recordatorios personales</h2>", unsafe_allow_html=True)
+# -------------------------------------------------------------------------
+# PÁGINA C: BUZÓN DE ENTREGAS Y CONSULTA DE NOTAS (ALUMNOS)
+# -------------------------------------------------------------------------
+elif menu_principal == "📤 Buzón y Notas de Tareas":
+    st.markdown("<h2 style='color:#1e3a8a;'>📤 Buzón de Actividades y Calificaciones</h2>", unsafe_allow_html=True)
     
-    if "tareas_locales" not in st.session_state:
-        st.session_state["tareas_locales"] = [
-            {"evento": "Repasar tema de continuidad", "fecha": "2026-06-20", "hecho": False},
-            {"evento": "Entrega obligatoria: Boletín 1", "fecha": "2026-06-25", "hecho": False}
-        ]
+    opcion_alumno = st.radio("¿Qué deseas hacer?", ["Enviar una nueva tarea", "Consultar mis notas y feedback"])
+    
+    if opcion_alumno == "Enviar una nueva tarea":
+        with st.form("form_entrega_colegio", clear_on_submit=True):
+            col_al1, col_al2 = st.columns(2)
+            with col_al1:
+                nombre_estudiante = st.text_input("Nombre completo del Alumno:")
+            with col_al2:
+                codigo_tarea = st.text_input("Nombre/Código de la Tarea:")
+                
+            archivo_adjunto = st.file_uploader("Documento de solución (PDF o Imagen):", type=["pdf", "png", "jpg", "jpeg", "docx"])
+            enviar_tarea_btn = st.form_submit_button("Subir Tarea Oficial")
+            
+            if enviar_tarea_btn:
+                if nombre_estudiante and codigo_tarea and archivo_adjunto:
+                    marca_tiempo = datetime.now().strftime("%Y-%m-%d_%H-%M")
+                    estudiante_id = nombre_estudiante.strip().replace(" ", "_")
+                    tarea_id = codigo_tarea.strip().replace(" ", "_")
+                    
+                    # Subimos el archivo del alumno
+                    ruta_final_entrega = f"Tareas_Alumnos/{tarea_id}/{estudiante_id}/{estudiante_id}_{archivo_adjunto.name}"
+                    
+                    # Creamos una plantilla de nota vacía en JSON para que la profe la rellene luego
+                    ruta_json_nota = f"Tareas_Alumnos/{tarea_id}/{estudiante_id}/calificacion.json"
+                    datos_nota_inicial = {"nota": "Sin calificar", "feedback": "Pendiente de revisión por la profesora.", "fecha_entrega": marca_tiempo}
+                    
+                    with st.spinner("Registrando entrega..."):
+                        subir_archivo_a_git = publicar_archivo(ruta_final_entrega, archivo_adjunto.getvalue(), f"Entrega de {nombre_estudiante}")
+                        subir_json_a_git = publicar_archivo(ruta_json_nota, json.dumps(datos_nota_inicial, indent=4).encode("utf-8"), "Registro de nota inicial")
+                        
+                        if subir_archivo_a_git and subir_json_a_git:
+                            st.success(f"🎉 ¡Perfecto, {nombre_estudiante}! Tu tarea '{codigo_tarea}' ha sido entregada. Ya está en la bandeja de la profesora.")
+                else:
+                    st.warning("Completa todos los datos antes de realizar el envío.")
+                    
+    elif opcion_alumno == "Consultar mis notas y feedback":
+        st.subheader("📋 Consulta tu Boletín Personal")
+        busqueda_nombre = st.text_input("Introduce tu Nombre Completo (exactamente como lo escribiste al entregar):")
         
-    col_a, col_b = st.columns([1, 2])
-    with col_a:
-        st.write("✍️ **Añadir un pendiente:**")
-        nueva_tarea = st.text_input("¿Qué tienes que hacer?")
-        fecha_tarea = st.date_input("Fecha límite:")
-        if st.button("➕ Añadir Recordatorio"):
-            if nueva_tarea:
-                st.session_state["tareas_locales"].append({"evento": nueva_tarea, "fecha": str(fecha_tarea), "hecho": False})
-                st.rerun()
-    with col_b:
-        st.write("🔔 **Tu lista de control:**")
-        for idx, t in enumerate(st.session_state["tareas_locales"]):
-            st.checkbox(f"📌 {t['evento']} — ⏱️ Límite: `{t['fecha']}`", key=f"todo_{idx}")
+        if busqueda_nombre:
+            id_busqueda = busqueda_nombre.strip().replace(" ", "_")
+            tareas_sistema = peticion_github("Tareas_Alumnos")
+            carpetas_tareas = [t["name"] for t in tareas_sistema if t["type"] == "dir"]
+            
+            encontrado = False
+            for tarea in carpetas_tareas:
+                # Comprobamos si este alumno tiene una carpeta dentro de esta tarea
+                ruta_alumno_tarea = f"Tareas_Alumnos/{tarea}/{id_busqueda}/calificacion.json"
+                chequeo_nota = peticion_github(ruta_alumno_tarea)
+                
+                if isinstance(chequeo_nota, dict) and "download_url" in chequeo_nota:
+                    encontrado = True
+                    res_json = requests.get(chequeo_nota["download_url"])
+                    if res_json.status_code == 200:
+                        datos_evaluacion = res_json.json()
+                        
+                        # Mostramos la calificación en pantalla de forma bonita
+                        color_nota = "#b45309" if datos_evaluacion['nota'] == "Sin calificar" else "#047857"
+                        st.markdown(f"""
+                            <div class='feedback-card'>
+                                <h4 style='margin:0; color:#1e3a8a;'>📝 Actividad: {tarea.replace('_', ' ')}</h4>
+                                <p style='margin: 5px 0;'><b>Estado / Calificación:</b> <span style='color:{color_nota}; font-weight:bold;'>{datos_evaluacion['nota']}</span></p>
+                                <p style='margin: 5px 0; color:#374151;'><b>Comentarios pedagógicos (Feedback):</b><br><i>{datos_evaluacion['feedback']}</i></p>
+                            </div>
+                        """, unsafe_allow_html=True)
+            if not encontrado:
+                st.info("No se han encontrado registros ni entregas para ese nombre.")
 
-# ==========================================
-# PESTAÑA 4: PANEL DE CONTROL DE LA PROFESORA
-# ==========================================
-with pestana_admin:
-    st.markdown("<h2 class='section-title'>🔐 Acceso Restringido a Dirección</h2>")
-    pass_admin = st.text_input("Introduce la clave de administración para desbloquear las herramientas:", type="password")
+# -------------------------------------------------------------------------
+# PÁGINA D: DESPACHO DE LA PROFESORA (EVALUACIÓN INTEGRAL)
+# -------------------------------------------------------------------------
+elif menu_principal == "👩‍🏫 Despacho de Profesora (Gestión)":
+    st.markdown("<h2 style='color:#1e3a8a;'>👩‍🏫 Panel de Control Técnico y Docente</h2>", unsafe_allow_html=True)
+    clave = st.text_input("Introduce la contraseña del despacho:", type="password")
     
-    if pass_admin == "profe2026":
-        st.success("🔒 Sesión de Administradora confirmada.")
+    if clave == "profe2026":
+        st.success("Acceso autorizado. Buenas tardes, profesora Elena.")
         st.write("---")
         
-        # CREAMOS DOS SUBSECCIONES DENTRO DEL PANEL DE CONTROL
-        sub_pestana_ver, sub_pestana_crear = st.tabs(["📥 VER ENTREGAS DE ALUMNOS", "🛠️ SUBIR MATERIALES Y CREAR CARPETAS"])
+        herramienta = st.selectbox("Selecciona qué panel de control deseas abrir:", [
+            "📥 CUADERNO DE NOTAS (Corregir y enviar Feedback)",
+            "📢 PUBLICAR NUEVO ANUNCIO",
+            "🛠️ GESTIONAR ASIGNATURAS Y TEMAS",
+            "📁 SUBIR MATERIAL DIDÁCTICO"
+        ])
         
-        # --------------------------------------------------
-        # SUB-PESTAÑA A: REVISAR ENTREGAS
-        # --------------------------------------------------
-        with sub_pestana_ver:
-            st.subheader("📁 Bandeja de Entrada de Tareas Recibidas")
+        # -----------------------------------------------------------------
+        # GESTIÓN 1: CUADERNO DE NOTAS (CORRECCIÓN Y REVISIÓN)
+        # -----------------------------------------------------------------
+        if herramienta == "📥 CUADERNO DE NOTAS (Corregir y enviar Feedback)":
+            st.subheader("📊 Calificación y Retroalimentación de Entregas")
             
-            # Leer la carpeta raíz donde caen las tareas
-            contenido_tareas = obtener_contenido("Tareas_Alumnos")
-            carpetas_tareas = [item["name"] for item in contenido_tareas if item["type"] == "dir"]
+            tareas_existentes = peticion_github("Tareas_Alumnos")
+            carpetas_de_actividades = [t["name"] for t in tareas_existentes if t["type"] == "dir"]
             
-            if carpetas_tareas:
-                tarea_a_revisar = st.selectbox("Selecciona la Tarea que quieres corregir:", carpetas_tareas)
+            if carpetas_de_actividades:
+                actividad_sel = st.selectbox("Seleccionar Tarea a evaluar:", carpetas_de_actividades)
                 
-                # Leer archivos dentro de esa tarea
-                archivos_entregados = obtener_contenido(f"Tareas_Alumnos/{tarea_a_revisar}")
-                entregas_reales = [f for f in archivos_entregados if f["type"] == "file" and f["name"] != ".gitkeep"]
+                # Listar alumnos que han entregado esta tarea
+                alumnos_carpetas = peticion_github(f"Tareas_Alumnos/{actividad_sel}")
+                lista_alumnos = [a["name"] for a in alumnos_carpetas if a["type"] == "dir"]
                 
-                if entregas_reales:
-                    st.info(f"Se han encontrado {len(entregas_reales)} entregas para esta actividad:")
-                    for f in entregas_reales:
-                        # Re-formatear nombre para mostrarlo más limpio (ej: Juan_Perez_2026-06-17_ejercicio.pdf)
-                        nombre_mostrar = f["name"].replace("_", " ")
+                if lista_alumnos:
+                    alumno_sel = st.selectbox("Seleccionar Alumno a Corregir:", lista_alumnos)
+                    
+                    # Leer ficheros del alumno seleccionado
+                    archivos_alumno = peticion_github(f"Tareas_Alumnos/{actividad_sel}/{alumno_sel}")
+                    
+                    # Separar el documento entregado del JSON de notas
+                    archivo_entrega_url = ""
+                    nombre_archivo_entrega = ""
+                    for arch in archivos_alumno:
+                        if arch["name"] != "calificacion.json" and arch["type"] == "file":
+                            archivo_entrega_url = arch["download_url"]
+                            nombre_archivo_entrega = arch["name"]
+                    
+                    # Cargar estado actual del JSON para ver si ya tiene nota guardada
+                    ruta_json = f"Tareas_Alumnos/{actividad_sel}/{alumno_sel}/calificacion.json"
+                    json_meta = peticion_github(ruta_json)
+                    
+                    nota_actual = "Sin calificar"
+                    feedback_actual = ""
+                    if isinstance(json_meta, dict) and "download_url" in json_meta:
+                        res_json_descarga = requests.get(json_meta["download_url"])
+                        if res_json_descarga.status_code == 200:
+                            dict_nota = res_json_descarga.json()
+                            nota_actual = dict_nota.get("nota", "Sin calificar")
+                            feedback_actual = dict_nota.get("feedback", "")
+                    
+                    # --- DISEÑO DEL EVALUADOR ---
+                    st.markdown(f"""
+                        <div class='task-submitted'>
+                            <h4>👤 Alumno: {alumno_sel.replace('_', ' ')}</h4>
+                            <p><b>Archivo enviado:</b> {nombre_archivo_entrega.replace('_', ' ')}</p>
+                            <a href='{archivo_entrega_url}' target='_blank'><button style='background-color:#4f46e5; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;'>📥 Descargar y Revisar Trabajo</button></a>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.write("### ✍️ Formulario de Calificación")
+                    col_n1, col_n2 = st.columns([1, 3])
+                    with col_n1:
+                        nueva_nota = st.text_input("Calificación (Ej: 8.5/10 o Sobresaliente):", value=str(nota_actual))
+                    with col_n2:
+                        nuevo_feedback = st.text_area("Comentarios pedagógicos y Feedback para el alumno:", value=feedback_actual)
                         
-                        col_name, col_btn = st.columns([4, 1])
-                        with col_name:
-                            st.markdown(f"<div class='task-box'>📤 <b>Entrega:</b> {nombre_mostrar}</div>", unsafe_allow_html=True)
-                        with col_btn:
-                            # Botón que descarga el archivo del alumno directamente al ordenador de la profe
-                            st.markdown(f"<br><a href='{f['download_url']}' target='_blank'><button style='background-color:#10b981; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer;'>📥 Descargar Archivo</button></a>", unsafe_allow_html=True)
+                    if st.button("💾 Guardar y Publicar Calificación"):
+                        datos_actualizados = {
+                            "nota": nueva_nota.strip(),
+                            "feedback": nuevo_feedback.strip(),
+                            "fecha_correccion": datetime.now().strftime("%Y-%m-%d %H:%M")
+                        }
+                        with st.spinner("Subiendo nota al expediente digital..."):
+                            if publicar_archivo(ruta_json, json.dumps(datos_actualizados, indent=4).encode("utf-8"), f"Calificación de {alumno_sel}"):
+                                st.success(f"¡Nota guardada! El alumno {alumno_sel.replace('_', ' ')} ya puede ver su feedback.")
+                                st.rerun()
                 else:
-                    st.warning("Aún ningún alumno ha subido archivos para esta tarea.")
+                    st.warning("No hay subcarpetas de alumnos en este bloque.")
             else:
-                st.info("La carpeta 'Tareas_Alumnos' está vacía. Ningún alumno ha enviado nada todavía.")
+                st.info("Nadie ha enviado trabajos para corregir todavía.")
                 
-        # --------------------------------------------------
-        # SUB-PESTAÑA B: SUBIR Y CREAR ESTRUCTURA
-        # --------------------------------------------------
-        with sub_pestana_crear:
-            st.subheader("🛠️ Panel de Carga de Contenidos")
-            tipo_accion = st.radio("¿Qué acción deseas ejecutar?", ["Subir Archivo/Apuntes", "Crear Nueva Carpeta o Asignatura"])
+        # -----------------------------------------------------------------
+        # GESTIÓN 2: PUBLICAR ANUNCIOS
+        # -----------------------------------------------------------------
+        elif herramienta == "📢 PUBLICAR NUEVO ANUNCIO":
+            st.subheader("Crear Comunicado Oficial")
+            titulo_comunicado = st.text_input("Título del Anuncio:")
+            cuerpo_comunicado = st.text_area("Mensaje:")
             
-            estructura = obtener_contenido()
-            lista_carpetas_admin = [item["name"] for item in estructura if item["type"] == "dir" and item["name"] != "Tareas_Alumnos"]
+            if st.button("Difundir Anuncio") and titulo_comunicado and cuerpo_comunicado:
+                fecha_clean = datetime.now().strftime("%d-%m-%Y")
+                titulo_clean = titulo_comunicado.strip().replace(" ", "_")
+                if publicar_archivo(f"Anuncios_Sistema/{fecha_clean}_{titulo_clean}.txt", cuerpo_comunicado.encode("utf-8"), "Aviso escolar"):
+                    st.success("Anuncio colgado.")
+                    st.rerun()
+                    
+        # -----------------------------------------------------------------
+        # GESTIÓN 3: CREAR ASIGNATURAS Y TEMAS
+        # -----------------------------------------------------------------
+        elif herramienta == "🛠️ GESTIONAR ASIGNATURAS Y TEMAS":
+            st.subheader("Diseño Curricular")
+            tipo_creacion = st.radio("¿Qué deseas crear?", ["Nueva Asignatura (Carpeta Raíz)", "Nuevo Tema (Subcarpeta)"])
             
-            if tipo_accion == "Subir Archivo/Apuntes":
-                if lista_carpetas_admin:
-                    target_folder = st.selectbox("Selecciona la carpeta principal:", lista_carpetas_admin, key="admin_root")
-                    
-                    sub_est = obtener_contenido(target_folder)
-                    sub_caps = [item["name"] for item in sub_est if item["type"] == "dir"]
-                    
-                    if sub_caps:
-                        sub_target = st.selectbox("Selecciona el tema interno (Opcional):", ["(Ninguna - Guardar en raíz)"] + sub_caps, key="admin_sub")
-                        ruta_final_admin = f"{target_folder}/{sub_target}" if sub_target != "(Ninguna - Guardar en raíz)" else target_folder
-                    else:
-                        ruta_final_admin = target_folder
-                        
-                    file_to_upload = st.file_uploader("Elige el documento de tu ordenador:")
-                    if st.button("🚀 Publicar en la Web") and file_to_upload:
-                        path_complete = f"{ruta_final_admin}/{file_to_upload.name}"
-                        with st.spinner("Subiendo..."):
-                            if subir_a_github(path_complete, file_to_upload.getvalue(), "Nuevo material escolar"):
-                                st.success(f"¡{file_to_upload.name} publicado correctamente!")
-                                st.rerun()
+            if tipo_creacion == "Nueva Asignatura (Carpeta Raíz)":
+                nombre_asig = st.text_input("Nombre de la Materia:")
+                if st.button("Crear Asignatura") and nombre_asig:
+                    if publicar_archivo(f"{nombre_asig.strip()}/.gitkeep", b"", "Crear asignatura"):
+                        st.success("Asignatura creada.")
+                        st.rerun()
+            else:
+                lista_asig = listar_carpetas_limpias()
+                if lista_asig:
+                    asig_padre = st.selectbox("¿A qué asignatura pertenece?", lista_asig)
+                    nombre_nuevo_tema = st.text_input("Nombre del Tema:")
+                    if st.button("Dar de Alta Tema") and nombre_nuevo_tema:
+                        if publicar_archivo(f"{asig_padre}/{nombre_nuevo_tema.strip()}/.gitkeep", b"", "Crear tema"):
+                            st.success("Tema integrado.")
+                            st.rerun()
                 else:
-                    st.warning("Primero debes crear una carpeta principal.")
+                    st.warning("No hay asignaturas.")
                     
-            elif tipo_accion == "Crear Nueva Carpeta o Asignatura":
-                nivel = st.radio("Jerarquía de la carpeta:", ["Carpeta Principal (Ej: Matemáticas 1º Bach)", "Subcarpeta/Tema (Ej: Tema 1 - Matrices)"])
+        # -----------------------------------------------------------------
+        # GESTIÓN 4: SUBIR ARCHIVOS PEDAGÓGICOS
+        # -----------------------------------------------------------------
+        elif herramienta == "📁 SUBIR MATERIAL DIDÁCTICO":
+            st.subheader("Carga de Material Docente")
+            lista_asig = listar_carpetas_limpias()
+            
+            if lista_asig:
+                asig_destino = st.selectbox("Selecciona Asignatura:", lista_asig)
+                elementos_asig = peticion_github(asig_destino)
+                temas_destino = [t["name"] for t in elementos_asig if t["type"] == "dir"]
                 
-                if nivel == "Carpeta Principal (Ej: Matemáticas 1º Bach)":
-                    nombre_nueva = st.text_input("Nombre de la nueva materia:")
-                    if st.button("Crear Carpeta Principal") and nombre_nueva:
-                        with st.spinner("Creando..."):
-                            if subir_a_github(f"{nombre_nueva.strip()}/.gitkeep", b"", "Creando asignatura"):
-                                st.success("¡Carpeta principal creada!")
-                                st.rerun()
+                if temas_destino:
+                    tema_final = st.selectbox("Selecciona el Tema:", ["(Raíz de la asignatura)"] + temas_destino)
+                    ruta_carga = asig_destino if tema_final == "(Raíz de la asignatura)" else f"{asig_destino}/{tema_final}"
                 else:
-                    if lista_carpetas_admin:
-                        raiz_padre = st.selectbox("¿Dentro de cuál va?", lista_carpetas_admin)
-                        nombre_sub = st.text_input("Nombre de la subcarpeta / tema:")
-                        if st.button("Crear Subcarpeta") and nombre_sub:
-                            with st.spinner("Creando..."):
-                                if subir_a_github(f"{raiz_padre}/{nombre_sub.strip()}/.gitkeep", b"", "Creando tema"):
-                                    st.success("¡Subcarpeta creada correctamente!")
-                                    st.rerun()
-    elif pass_admin != "":
-        st.error("🔒 Contraseña incorrecta. Acceso denegado.")
+                    ruta_carga = asig_destino
+                    
+                documento_profe = st.file_uploader("Elige el documento de tu PC:")
+                if st.button("Subir Material") and documento_profe:
+                    if publicar_archivo(f"{ruta_carga}/{documento_profe.name}", documento_profe.getvalue(), "Subida de material"):
+                        st.success("Documento publicado.")
+                        st.rerun()
