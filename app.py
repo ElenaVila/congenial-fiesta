@@ -12,6 +12,7 @@ RAMA = "MATEMATICAS"
 TOKEN_GITHUB = st.secrets["TOKEN_GITHUB"]
 
 # Estilos visuales más limpios y modernos
+# ASÍ DEBE QUEDAR CORREGIDO:
 st.markdown("""
     <style>
     .main { background-color: #f8f9fa; }
@@ -24,7 +25,7 @@ st.markdown("""
     }
     .titulo { color: #1E3A8A; font-weight: bold; }
     </style>
-""", unsafe_html= permeability=True)
+""", unsafe_html=True)
 
 # --- FUNCIONES DE GITHUB ---
 def obtener_archivos(ruta=""):
