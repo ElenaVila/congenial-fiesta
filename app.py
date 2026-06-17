@@ -3,154 +3,38 @@ import requests
 import base64
 import json
 from datetime import datetime
+import pandas as pd
 
 # =========================================================================
-# 1. IDENTIDAD VISUAL GOOGLE CLASSROOM (FUENTES, BANNERS Y BOTONES INTEGRADOS)
+# 1. ESTILO LIMPIO Y COLORIDO DE AULA VIRTUAL (SIN SOLAPAMIENTOS)
 # =========================================================================
-st.set_page_config(page_title="Google Classroom", layout="wide")
+st.set_page_config(page_title="Aula Virtual", layout="wide")
 
 st.markdown("""
     <style>
-    /* Importar la fuente oficial y limpia de Google */
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+    /* Tipografía limpia y profesional */
+    @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
     
     html, body, [data-testid="stAppViewContainer"] {
-        font-family: 'Roboto', sans-serif !important;
-        background-color: #ffffff !important;
+        font-family: 'Segoe UI', sans-serif !important;
+        background-color: #f8fafc !important;
     }
-    
-    /* Eliminar la tipografía de niño pequeño de todos los elementos */
-    h1, h2, h3, h4, h5, h6, p, span, label {
-        font-family: 'Roboto', sans-serif !important;
+
+    /* Títulos con personalidad y color */
+    .main-title {
+        color: #1e3a8a;
+        font-weight: 700;
+        margin-bottom: 20px;
     }
-    
-    /* --- REDISEÑO DE TARJETAS ESTILO GOOGLE CLASSROOM --- */
-    .classroom-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 24px;
-        margin-top: 24px;
-    }
-    
-    .classroom-card {
+
+    /* Contenedor de recursos sin estilos que rompan el uploader */
+    .recurso-bloque {
+        padding: 15px;
         background-color: #ffffff;
-        border: 1px solid #dadce0;
         border-radius: 8px;
-        width: 300px;
-        height: 240px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        box-shadow: none;
-        transition: box-shadow 0.2s;
-    }
-    .classroom-card:hover {
-        box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
-    }
-    
-    /* Banners superiores idénticos a los de la captura real */
-    .banner-calculus { background: linear-gradient(135px, #d91b5c 0%, #e91e63 100%); }
-    .banner-history { background: linear-gradient(135px, #5f6368 0%, #7fc4c2 100%); }
-    .banner-biology { background: linear-gradient(135px, #673ab7 0%, #9c27b0 100%); }
-    .banner-computer { background: linear-gradient(135px, #00796b 0%, #009688 100%); }
-    .banner-spanish { background: linear-gradient(135px, #1565c0 0%, #2196f3 100%); }
-    .banner-default { background: linear-gradient(135px, #1e3a8a 0%, #3b82f6 100%); }
-    
-    .card-top {
-        color: white;
-        padding: 16px;
-        height: 110px;
-        position: relative;
-    }
-    .card-title {
-        font-size: 22px;
-        font-weight: 500;
-        margin: 0;
-        color: white !important;
-        line-height: 1.2;
-    }
-    .card-subtitle {
-        font-size: 13px;
-        opacity: 0.9;
-        margin-top: 4px;
-        color: white !important;
-    }
-    
-    .card-bottom {
-        padding: 16px;
-        background-color: white;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        border-top: 1px solid #e8eaed;
-    }
-    
-    /* --- REDISEÑO DE BOTONES PARA INTEGRARLOS EN LA TARJETA --- */
-    div.stButton > button {
-        background-color: transparent !important;
-        color: #1a73e8 !important;
-        border: 1px solid #dadce0 !important;
-        border-radius: 4px !important;
-        padding: 6px 16px !important;
-        font-weight: 500 !important;
-        font-size: 14px !important;
-        width: auto !important;
-        box-shadow: none !important;
-        transition: background-color 0.2s, border-color 0.2s !important;
-        margin-top: 5px !important;
-    }
-    div.stButton > button:hover {
-        background-color: #f4f8fe !important;
-        border-color: #1a73e8 !important;
-    }
-    
-    /* --- DISEÑO INTERIOR DE LOS TEMAS (CLASSWORK) --- */
-    .classwork-container {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-    .topic-section {
-        border-bottom: 1px solid #e8eaed;
-        padding-bottom: 16px;
-        margin-top: 32px;
-    }
-    .topic-title-text {
-        color: #1c1d22;
-        font-size: 24px;
-        font-weight: 400;
-        margin-bottom: 16px;
-    }
-    .row-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 14px 24px;
-        border: 1px solid #dadce0;
-        border-radius: 8px;
-        background-color: #ffffff;
-        margin-bottom: 8px;
-        transition: background-color 0.1s;
-    }
-    .row-item:hover { background-color: #f8f9fa; }
-    
-    /* Mini etiquetas elegantes */
-    .tag-task {
-        font-size: 11px;
-        background-color: #fee2e2;
-        color: #c53030;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-weight: 500;
-    }
-    .tag-material {
-        font-size: 11px;
-        background-color: #e6f4ea;
-        color: #137333;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-weight: 500;
+        border-left: 5px solid #3b82f6;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -162,7 +46,7 @@ RAMA = "MATEMATICAS"
 TOKEN_GITHUB = st.secrets["TOKEN_GITHUB"]
 
 # =========================================================================
-# 2. CORE: CONECTIVIDAD TOTAL CON GITHUB API
+# 2. MAQUINARIA DE CONEXIÓN CON GITHUB (SIN ALTERAR LA UTILIDAD)
 # =========================================================================
 def api_git(ruta="", metodo="GET", datos=None):
     url = f"https://api.github.com/repos/{USUARIO_GIT}/{REPOSITORIO_GIT}/contents/{ruta}?ref={RAMA}"
@@ -193,27 +77,27 @@ if "curso_activo" not in st.session_state:
     st.session_state["curso_activo"] = None
 
 # =========================================================================
-# 3. NAVEGACIÓN LATERAL MINIMALISTA
+# 3. NAVEGACIÓN PRINCIPAL DEL AULA VIRTUAL
 # =========================================================================
-st.sidebar.markdown("<h3 style='color: #5f6368; font-weight:500; margin-bottom:20px;'>≡ Google Classroom</h3>", unsafe_allow_html=True)
-navegacion = st.sidebar.radio("Navegación:", [
-    "📚 Clases",
-    "📅 Calendario",
-    "👩‍🏫 Panel del Profesor"
+st.sidebar.markdown("<h2 style='color: #1e3a8a; font-weight: 700;'>🏫 Aula Virtual</h2>", unsafe_allow_html=True)
+st.sidebar.write("---")
+navegacion = st.sidebar.radio("Secciones disponibles:", [
+    "📚 Mis Asignaturas",
+    "📅 Calendario de Entregas",
+    "👩‍🏫 Panel de Gestión Docente"
 ])
 
-if navegacion != "📚 Clases":
+if navegacion != "📚 Mis Asignaturas":
     st.session_state["curso_activo"] = None
 
 # -------------------------------------------------------------------------
-# VISTA A: PANEL PRINCIPAL DE CLASES (REPLICANDO LA CAPTURA DE CLASSROOM)
+# VISTA A: TABLÓN DE ASIGNATURAS CON IMAGEN DE PORTADA PERSONALIZADA
 # -------------------------------------------------------------------------
-if navegacion == "📚 Clases":
+if navegacion == "📚 Mis Asignaturas":
     
-    # 🏠 CASO 1: CUADRÍCULA DE TARJETAS LIMPIAS
     if st.session_state["curso_activo"] is None:
-        st.markdown("<h3 style='color: #5f6368; font-weight: 400; margin-top:10px;'>Cursos activos</h3>", unsafe_allow_html=True)
-        st.write("---")
+        st.markdown("<h1 class='main-title'>📚 Mis Cursos Activos</h1>", unsafe_allow_html=True)
+        st.write("Selecciona una asignatura para acceder a los materiales, unidades didácticas y entregas.")
         
         asignaturas = listar_directorios()
         
@@ -221,138 +105,113 @@ if navegacion == "📚 Clases":
             cols = st.columns(3)
             for idx, asig in enumerate(asignaturas):
                 with cols[idx % 3]:
+                    # Intentar buscar si la asignatura tiene una imagen de portada personalizada guardada
+                    archivo_portada = api_git(f"{asig}/portada_curso.png")
+                    if not archivo_portada or isinstance(archivo_portada, list):
+                        archivo_portada = api_git(f"{asig}/portada_curso.jpg")
                     
-                    # Asignación de banners reales idénticos a los de Google Classroom
-                    nombre_lower = asig.lower()
-                    if "calculus" in nombre_lower or "matematica" in nombre_lower or "funciones" in nombre_lower:
-                        clase_banner = "banner-calculus"
-                        sub_info = "Cálculo y Álgebra"
-                    elif "history" in nombre_lower or "historia" in nombre_lower:
-                        clase_banner = "banner-history"
-                        sub_info = "Historia del Arte"
-                    elif "biology" in nombre_lower or "biologia" in nombre_lower:
-                        clase_banner = "banner-biology"
-                        sub_info = "Anatomía celular"
-                    elif "computer" in nombre_lower or "tecnologia" in nombre_lower:
-                        clase_banner = "banner-computer"
-                        sub_info = "Computer Science"
-                    elif "spanish" in nombre_lower or "lengua" in nombre_lower:
-                        clase_banner = "banner-spanish"
-                        sub_info = "Gramática y Literatura"
-                    else:
-                        clase_banner = "banner-default"
-                        sub_info = "Curso General"
+                    # Mostrar la portada si existe, si no, un color corporativo por defecto
+                    with st.container(border=True):
+                        if isinstance(archivo_portada, dict) and "download_url" in archivo_portada:
+                            st.image(archivo_portada["download_url"], use_container_width=True)
+                        else:
+                            st.markdown(f"""
+                                <div style='background: linear-gradient(135px, #3b82f6 0%, #1d4ed8 100%); 
+                                     height: 120px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white;'>
+                                     <span style='font-size: 40px;'>📘</span>
+                                </div>
+                            """, unsafe_allow_html=True)
                         
-                    # Renderizado HTML puro de la tarjeta al estilo exacto de Google
-                    st.markdown(f"""
-                        <div class='classroom-card'>
-                            <div class='card-top {clase_banner}'>
-                                <h3 class='card-title'>{asig.replace('_', ' ')}</h3>
-                                <div class='card-subtitle'>{sub_info}</div>
-                            </div>
-                            <div class='card-bottom'>
-                                <div style='font-size: 13px; color: #70757a;'>Revisar tareas pendientes</div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # El botón de entrada ya no es tosco, se alinea de forma elegante
-                    if st.button("Ver tablón", key=f"entrar_{asig}"):
-                        st.session_state["curso_activo"] = asig
-                        st.rerun()
+                        # Nombre claro de la asignatura justo debajo de la foto
+                        st.markdown(f"<h3 style='margin: 10px 0 5px 0; color: #0f172a;'>{asig.replace('_', ' ')}</h3>", unsafe_allow_html=True)
+                        st.write("Acceso al contenido del curso.")
+                        
+                        if st.button("Entrar al Aula", key=f"open_{asig}"):
+                            st.session_state["curso_activo"] = asig
+                            st.rerun()
         else:
-            st.info("No hay clases creadas en el tablón todavía.")
+            st.info("Aún no hay asignaturas registradas en el Aula Virtual.")
 
-    # 📖 CASO 2: TRABAJO DE CLASE (DENTRO DEL CURSO)
     else:
+        # INTERIOR DE LA ASIGNATURA
         asig_actual = st.session_state["curso_activo"]
         
-        if st.button("← Volver a Clases"):
+        if st.button("⬅️ Volver al listado de asignaturas"):
             st.session_state["curso_activo"] = None
             st.rerun()
             
-        st.markdown(f"""
-            <div style='border-bottom: 1px solid #e8eaed; padding-bottom: 10px; margin-top:15px;'>
-                <h1 style='color: #1a73e8; font-weight: 400; margin:0;'>{asig_actual.replace('_', ' ')}</h1>
-                <p style='color: #5f6368; font-size: 14px; margin: 4px 0 0 0;'>Trabajo de clase</p>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"<h1 class='main-title'>📖 Asignatura: {asig_actual.replace('_', ' ')}</h1>", unsafe_allow_html=True)
+        st.write("Unidades didácticas secuenciales publicadas por el profesorado:")
+        st.write("---")
         
         temas = listar_directorios(asig_actual)
-        
         if temas:
-            # Estructura limpia y correlativa centrada
             for tema in temas:
-                st.markdown(f"<div class='topic-section'><div class='topic-title-text'>{tema.replace('_', ' ')}</div></div>", unsafe_allow_html=True)
-                
-                elementos_tema = api_git(f"{asig_actual}/{tema}")
-                archivos = [e for e in elementos_tema if e["type"] == "file" and e["name"] != ".gitkeep"]
-                
-                if archivos:
-                    for el in archivos:
-                        es_tarea = el["name"].startswith("TAREA_")
-                        
-                        if es_tarea:
-                            partes = el["name"].split("_", 2)
-                            f_limite = partes[1] if len(partes) > 1 else "Sin fecha"
-                            t_nombre = partes[2].replace("_", " ").split(".")[0] if len(partes) > 2 else "Tarea"
+                with st.expander(f"📁 {tema.replace('_', ' ')}", expanded=True):
+                    elementos_tema = api_git(f"{asig_actual}/{tema}")
+                    archivos = [e for e in elementos_tema if e["type"] == "file" and e["name"] != ".gitkeep"]
+                    
+                    if archivos:
+                        for el in archivos:
+                            es_tarea = el["name"].startswith("TAREA_")
                             
-                            st.markdown(f"""
-                                <div class='row-item'>
-                                    <div>
-                                        <span class='tag-task'>📋 Tarea</span>
-                                        <b style='margin-left:12px; color: #3c4043;'>{t_nombre}</b>
+                            if es_tarea:
+                                partes = el["name"].split("_", 2)
+                                f_limite = partes[1] if len(partes) > 1 else "Sin fecha"
+                                t_nombre = partes[2].replace("_", " ").split(".")[0] if len(partes) > 2 else "Tarea"
+                                
+                                st.markdown(f"""
+                                    <div class='recurso-bloque' style='border-left-color: #ef4444; background-color: #fef2f2;'>
+                                        <span style='background-color:#ef4444; color:white; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;'>TAREA OBLIGATORIA</span>
+                                        <h4 style='margin:5px 0; color:#991b1b;'>📋 {t_nombre}</h4>
+                                        <p style='margin:0; font-size:13px; color:#5f6368;'>Fecha de vencimiento: <b>{f_limite}</b></p>
+                                        <p style='margin-top:5px;'><a href='{el['download_url']}' target='_blank' style='color:#ef4444; font-weight:bold;'>📥 Descargar Enunciado de la Actividad</a></p>
                                     </div>
-                                    <div style='font-size: 13px; color: #70757a;'>
-                                        Fecha límite: {f_limite} | <a href='{el['download_url']}' target='_blank' style='color:#1a73e8; text-decoration:none; font-weight:500;'>Abrir</a>
-                                    </div>
-                                </div>
-                            """, unsafe_allow_html=True)
-                            
-                            with st.expander(f"Entregar: {t_nombre}"):
-                                with st.form(f"f_entrega_{el['name']}", clear_on_submit=True):
-                                    nombre_al = st.text_input("Nombre del Alumno:")
-                                    archivo_al = st.file_uploader("Adjuntar solución:", type=["pdf","png","jpg","jpeg"])
+                                """, unsafe_allow_html=True)
+                                
+                                # Formulario limpio (SIN SOLAPAMIENTOS "upload upload")
+                                with st.container(border=True):
+                                    st.write("📬 **Formulario de entrega para el alumno:**")
+                                    nombre_al = st.text_input("Escribe tus Apellidos y Nombre:", key=f"name_al_{el['name']}")
+                                    archivo_al = st.file_uploader("Selecciona tu archivo resuelto (PDF o Imagen):", type=["pdf","png","jpg","jpeg"], key=f"file_al_{el['name']}")
                                     
-                                    if st.form_submit_button("Enviar solución"):
+                                    if st.button("Enviar Tarea al Profesor", key=f"btn_send_{el['name']}"):
                                         if nombre_al and archivo_al:
                                             id_al = nombre_al.strip().replace(" ", "_")
                                             id_tar = el["name"].split(".")[0]
                                             
                                             ruta_file = f"Entregas_Globales/{asig_actual}/{id_tar}/{id_al}/{archivo_al.name}"
                                             ruta_json = f"Entregas_Globales/{asig_actual}/{id_tar}/{id_al}/nota.json"
-                                            meta = {"nota": "Sin calificar", "feedback": "Pendiente.", "fecha": datetime.now().strftime("%d/%m/%Y")}
+                                            meta = {"nota": "Sin calificar", "feedback": "Pendiente de corrección.", "fecha": datetime.now().strftime("%d/%m/%Y")}
                                             
                                             if enviar_archivo(ruta_file, archivo_al.getvalue(), "Entrega") and enviar_archivo(ruta_json, json.dumps(meta).encode("utf-8"), "Meta"):
-                                                st.success(f"✔️ Archivo '{archivo_al.name}' entregado correctamente.")
-                        else:
-                            nombre_mat = el["name"].replace("_", " ").split(".")[0]
-                            st.markdown(f"""
-                                <div class='row-item'>
-                                    <div>
-                                        <span class='tag-material'>📖 Material</span>
-                                        <span style='margin-left:12px; color: #3c4043;'>{nombre_mat}</span>
+                                                st.success(f"✔️ ¡Hecho! El documento '{archivo_al.name}' se ha entregado correctamente.")
+                                        else:
+                                            st.warning("Por favor, rellena tu nombre y adjunta un archivo antes de enviar.")
+                            else:
+                                nombre_mat = el["name"].replace("_", " ").split(".")[0]
+                                st.markdown(f"""
+                                    <div class='recurso-bloque' style='border-left-color: #10b981; background-color: #f0fdf4;'>
+                                        <span style='background-color:#10b981; color:white; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;'>MATERIAL DE ESTUDIO</span>
+                                        <h4 style='margin:5px 0; color:#14532d;'>📖 {nombre_mat}</h4>
+                                        <p style='margin:0;'><a href='{el['download_url']}' target='_blank' style='color:#10b981; font-weight:bold;'>📥 Descargar Apuntes / Lecturas</a></p>
                                     </div>
-                                    <div>
-                                        <a href='{el['download_url']}' target='_blank' style='color:#1a73e8; text-decoration:none; font-weight:500;'>Descargar</a>
-                                    </div>
-                                </div>
-                            """, unsafe_allow_html=True)
-                else:
-                    st.write("<p style='color:#70757a; font-size:13px; padding-left:10px;'>No hay materiales asignados.</p>", unsafe_allow_html=True)
+                                """, unsafe_allow_html=True)
+                    else:
+                        st.info("Este bloque temático aún no tiene materiales cargados.")
         else:
-            st.info("No hay unidades temáticas configuradas.")
+            st.info("Esta asignatura no tiene carpetas o temas creados.")
 
 # -------------------------------------------------------------------------
-# VISTA B: CALENDARIO ESCOLAR AUTOMÁTICO
+# VISTA B: CALENDARIO ESCOLAR REORGANIZADO EN MATRIZ VISUAL DE CUADRÍCULA
 # -------------------------------------------------------------------------
-elif navegacion == "📅 Calendario":
-    st.title("📅 Calendario Escolar")
-    st.write("Seguimiento de plazos automáticos fijados en las tareas de clase.")
+elif navegacion == "📅 Calendario de Entregas":
+    st.markdown("<h1 class='main-title'>📅 Agenda y Calendario Escolar</h1>", unsafe_allow_html=True)
+    st.write("Cuadrícula visual con todas las actividades ordenadas por fecha de vencimiento.")
     st.write("---")
     
     todas_asig = listar_directorios()
-    tareas_totales = False
+    datos_calendario = []
     
     for asig in todas_asig:
         todos_temas = listar_directorios(asig)
@@ -361,79 +220,97 @@ elif navegacion == "📅 Calendario":
             if isinstance(elementos_tem, list):
                 for e in elementos_tem:
                     if e["type"] == "file" and e["name"].startswith("TAREA_"):
-                        tareas_totales = True
                         partes = e["name"].split("_", 2)
                         f_limite = partes[1] if len(partes) > 1 else "Sin fecha"
                         t_nombre = partes[2].replace("_", " ").split(".")[0] if len(partes) > 2 else "Tarea"
                         
-                        st.markdown(f"""
-                            <div class='cal-card-auto'>
-                                ⏰ <b>Vencimiento: {f_limite}</b> — 📋 {t_nombre} (Materia: {asig.replace('_',' ')})
-                            </div>
-                        """, unsafe_allow_html=True)
-    if not tareas_totales:
-        st.info("No tienes tareas programadas en el calendario.")
+                        datos_calendario.append({
+                            "📅 FECHA LÍMITE": f_limite,
+                            "📚 ASIGNATURA": asig.replace('_', ' '),
+                            "📋 ACTIVIDAD PENDIENTE": t_nombre
+                        })
+                        
+    if datos_calendario:
+        df_cal = pd.DataFrame(datos_calendario)
+        # Mostrar en forma de cuadrícula de calendario indexada limpia para que no sea una simple línea de texto
+        st.data_editor(df_cal, use_container_width=True, disabled=True)
+    else:
+        st.info("¡Estás al día! No hay actividades programadas en el calendario.")
 
 # -------------------------------------------------------------------------
-# VISTA C: PANEL DE LA PROFESORA
+# VISTA C: PANEL DE CONTROL DOCENTE (PERMITE SUBIR IMAGEN DE PORTADA)
 # -------------------------------------------------------------------------
-elif navegacion == "👩‍🏫 Panel del Profesor":
-    st.title("👩‍🏫 Panel de Control Docente")
-    password = st.text_input("Contraseña de acceso:", type="password")
+elif navegacion == "👩‍🏫 Panel de Gestión Docente":
+    st.markdown("<h1 class='main-title'>👩‍🏫 Despacho Docente</h1>", unsafe_allow_html=True)
+    password = st.text_input("Código de Validación Docente:", type="password")
     
     if password == "profe2026":
-        st.success("Acceso confirmado.")
+        st.success("🔒 Sesión de administración iniciada con éxito.")
         st.write("---")
         
-        menu_admin = st.selectbox("Módulo:", ["🛠️ Crear tema y subir archivos", "📥 Ver entregas", "🏫 Crear asignatura"])
+        menu_admin = st.selectbox("Selecciona el módulo de gestión:", [
+            "🛠️ PUBLICAR TEMAS Y RECURSOS ACADÉMICOS",
+            "📥 BANDEJA DE CORRECCIÓN (Ver Respuestas Alumnos)",
+            "🏫 ALTA DE NUEVAS ASIGNATURAS CON PORTADA"
+        ])
         
-        if menu_admin == "🛠️ Crear tema y subir archivos":
+        if menu_admin == "🛠️ PUBLICAR TEMAS Y RECURSOS ACADÉMICOS":
+            st.subheader("Carga y Publicación Correlativa")
             asig_list = listar_directorios()
+            
             if asig_list:
-                asig_sel_profe = st.selectbox("Asignatura:", asig_list)
-                gestion_tema = st.radio("Acción:", ["Crear tema nuevo", "Añadir a tema existente"])
+                asig_sel_profe = st.selectbox("Selecciona la asignatura a gestionar:", asig_list)
+                gestion_tema = st.radio("¿Qué deseas hacer?", ["Crear una nueva unidad temática", "Añadir recursos a una unidad ya existente"])
                 
-                if gestion_tema == "Crear tema nuevo":
-                    nombre_t = st.text_input("Nombre del Tema:")
+                if gestion_tema == "Crear una nueva unidad temática":
+                    nombre_t = st.text_input("Nombre de la unidad (Ej: Tema 2 Derivadas):")
                     tema_ruta_final = nombre_t.strip().replace(" ", "_")
                 else:
                     temas_ex = listar_directorios(asig_sel_profe)
-                    tema_ruta_final = st.selectbox("Tema:", temas_ex) if temas_ex else None
+                    tema_ruta_final = st.selectbox("Elige el tema:", temas_ex) if temas_ex else None
                     
                 if tema_ruta_final:
-                    tipo_archivo = st.radio("Tipo:", ["📖 Material", "📋 Tarea"])
+                    tipo_archivo = st.radio("Clasificación del Recurso Escolar:", ["📖 Material Formativo", "📋 Tarea Evaluante"])
                     
-                    if tipo_archivo == "📋 Tarea":
-                        f_limite_p = st.date_input("Fecha límite:")
-                        fichero_p = st.file_uploader("Ficha de Tarea:")
+                    if tipo_archivo == "📋 Tarea Evaluante":
+                        f_limite_p = st.date_input("Fijar fecha de vencimiento:")
+                        fichero_p = st.file_uploader("Adjunta el archivo del enunciado:", key="u_tarea_doc")
                         
-                        if st.button("Publicar Tarea") and fichero_p:
+                        if st.button("🚀 Publicar Tarea de forma Oficial") and fichero_p:
                             nombre_archivo_git = f"TAREA_{str(f_limite_p)}_{fichero_p.name.replace(' ', '_')}"
-                            ruta_complete = f"{asig_sel_profe}/{tema_ruta_final}/{nombre_archivo_git}"
-                            if enviar_archivo(f"{asig_sel_profe}/{tema_ruta_final}/.gitkeep", b"", "Init") and enviar_archivo(ruta_complete, fichero_p.getvalue(), "Carga"):
-                                st.success(f"✔️ Tarea '{fichero_p.name}' publicada correctamente en {tema_ruta_final.replace('_',' ')}.")
+                            ruta_completa = f"{asig_sel_profe}/{tema_ruta_final}/{nombre_archivo_git}"
+                            
+                            enviar_archivo(f"{asig_sel_profe}/{tema_ruta_final}/.gitkeep", b"", "Init")
+                            if enviar_archivo(ruta_completa, fichero_p.getvalue(), "Carga"):
+                                st.success("✔️ Tarea subida con éxito.")
+                                st.rerun()
                     else:
-                        fichero_p = st.file_uploader("Apuntes / PDF:")
-                        if st.button("Publicar Material") and fichero_p:
+                        fichero_p = st.file_uploader("Adjunta los apuntes o guías académicas:", key="u_mat_doc")
+                        if st.button("🚀 Publicar Material Didáctico") and fichero_p:
                             nombre_archivo_git = fichero_p.name.replace(' ', '_')
-                            ruta_complete = f"{asig_sel_profe}/{tema_ruta_final}/{nombre_archivo_git}"
-                            if enviar_archivo(f"{asig_sel_profe}/{tema_ruta_final}/.gitkeep", b"", "Init") and enviar_archivo(ruta_complete, fichero_p.getvalue(), "Carga"):
-                                st.success(f"✔️ Material '{fichero_p.name}' publicado con éxito.")
-                                
-        elif menu_admin == "📥 Ver entregas":
+                            ruta_completa = f"{asig_sel_profe}/{tema_ruta_final}/{nombre_archivo_git}"
+                            
+                            enviar_archivo(f"{asig_sel_profe}/{tema_ruta_final}/.gitkeep", b"", "Init")
+                            if enviar_archivo(ruta_completa, fichero_p.getvalue(), "Carga"):
+                                st.success("✔️ Material subido con éxito.")
+                                st.rerun()
+
+        elif menu_admin == "📥 BANDEJA DE CORRECCIÓN (Ver Respuestas Alumnos)":
+            st.subheader("Bandeja de Entrada de Ejercicios")
             asig_list = listar_directorios()
+            
             if asig_list:
-                asig_eval = st.selectbox("Asignatura:", asig_list)
+                asig_eval = st.selectbox("Selecciona Asignatura:", asig_list)
                 entregas_raiz = api_git(f"Entregas_Globales/{asig_eval}")
                 carpetas_tareas = [c["name"] for c in entregas_raiz if c["type"] == "dir"]
                 
                 if carpetas_tareas:
-                    tarea_eval = st.selectbox("Tarea:", carpetas_tareas)
+                    tarea_eval = st.selectbox("Selecciona la Tarea que deseas evaluar:", carpetas_tareas)
                     alumnos_lista = api_git(f"Entregas_Globales/{asig_eval}/{tarea_eval}")
                     id_alumnos = [a["name"] for a in alumnos_lista if a["type"] == "dir"]
                     
                     if id_alumnos:
-                        alumno_eval = st.selectbox("Alumno:", id_alumnos)
+                        alumno_eval = st.selectbox("Selecciona el alumno a calificar:", id_alumnos)
                         archivos_f = api_git(f"Entregas_Globales/{asig_eval}/{tarea_eval}/{alumno_eval}")
                         
                         url_doc, name_doc = "", ""
@@ -452,25 +329,37 @@ elif navegacion == "👩‍🏫 Panel del Profesor":
                                 feedback_v = res_d.json().get("feedback", "")
                                 
                         st.markdown(f"""
-                            <div style='background-color:#ffffff; border:1px solid #dadce0; padding:16px; border-radius:8px; margin-bottom:15px;'>
-                                Alumno: <b>{alumno_eval.replace('_',' ')}</b><br>
-                                Archivo: {name_doc.replace('_',' ')}<br><br>
-                                <a href='{url_doc}' target='_blank' style='color:#1a73e8; text-decoration:none; font-weight:bold;'>📥 Abrir documento entregado</a>
+                            <div style='background-color:#ffffff; border:1px solid #dadce0; padding:20px; border-radius:12px; margin-bottom:15px;'>
+                                👤 <b>Estudiante:</b> {alumno_eval.replace('_',' ')}<br>
+                                📄 <b>Archivo:</b> {name_doc.replace('_',' ')}<br><br>
+                                <a href='{url_doc}' target='_blank'>📥 Descargar trabajo entregado</a>
                             </div>
                         """, unsafe_allow_html=True)
                         
-                        input_n = st.text_input("Calificación:", value=str(nota_v))
-                        input_f = st.text_area("Feedback:", value=feedback_v)
+                        input_n = st.text_input("Calificación final:", value=str(nota_v))
+                        input_f = st.text_area("Comentarios pedagógicos (Feedback):", value=feedback_v)
                         
-                        if st.button("Guardar Nota"):
+                        if st.button("💾 Publicar Nota en el Expediente"):
                             nueva_data = {"nota": input_n, "feedback": input_f, "fecha": datetime.now().strftime("%d/%m/%Y")}
-                            if enviar_archivo(ruta_json_nota, json.dumps(nueva_data).encode("utf-8"), "Nota"):
-                                st.success(f"✔️ Nota guardada correctamente.")
-                                
-        elif menu_admin == "🏫 Crear asignatura":
-            nueva_asig = st.text_input("Nombre de la asignatura:")
-            if st.button("Crear Asignatura"):
-                if nueva_asig:
+                            if enviar_archivo(ruta_json_nota, json.dumps(nueva_data).encode("utf-8"), "Nota guardada"):
+                                st.success("✔️ Calificación guardada.")
+                                st.rerun()
+
+        elif menu_admin == "🏫 ALTA DE NUEVAS ASIGNATURAS CON PORTADA":
+            st.subheader("Alta de Clases y Configuración Estética")
+            nueva_asig = st.text_input("Nombre de la nueva Asignatura (Ej: Historia de España):")
+            
+            # ¡NUEVA FUNCIÓN VISUAL! Permitir a la administradora subir la imagen que quiera para el tablón
+            imagen_portada = st.file_uploader("Sube una imagen de portada para esta asignatura (.png o .jpg):", type=["png", "jpg", "jpeg"], key="u_portada_main")
+            
+            if st.button("Consolidar Asignatura en el Aula Virtual"):
+                if nueva_asig and imagen_portada:
                     clean_asig = nueva_asig.strip().replace(" ", "_")
-                    if enviar_archivo(f"{clean_asig}/.gitkeep", b"", "Alta"):
-                        st.success(f"✔️ Asignatura '{nueva_asig}' creada correctamente.")
+                    extension = imagen_portada.name.split(".")[-1]
+                    ruta_img = f"{clean_asig}/portada_curso.{extension}"
+                    
+                    if enviar_archivo(f"{clean_asig}/.gitkeep", b"", "Alta") and enviar_archivo(ruta_img, imagen_portada.getvalue(), "Portada"):
+                        st.success(f"✔️ ¡Éxito! La asignatura '{nueva_asig}' ha sido creada y su imagen de portada se configuró correctamente.")
+                        st.rerun()
+                else:
+                    st.warning("Debes escribir el nombre y subir una imagen de portada.")
