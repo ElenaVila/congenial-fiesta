@@ -191,7 +191,6 @@ elif user_sesion == "admin":
                 id_alumnos = [a["name"] for a in alumnos_lista if a["type"] == "dir"]
                 
                 if id_alumnos:
-                    # CORRECCIÓN AL KEYERROR: Verificamos de forma segura si el UID existe en nuestra DB de usuarios
                     opciones_combo = {uid: DB_USUARIOS[uid]["nombre"] for uid in id_alumnos if uid in DB_USUARIOS}
                     
                     if opciones_combo:
@@ -227,10 +226,10 @@ elif user_sesion == "admin":
                         if st.button("💾 Publicar Nota"):
                             nueva_data = {"nota": input_n, "feedback": input_f, "fecha_correccion": datetime.now().strftime("%d/%m/%Y")}
                             if enviar_archivo(ruta_json_nota, json.dumps(nueva_data).encode("utf-8"), "Nota"):
-                                st.success("✔️ Calificación guardada.")
+                                st.success("✔️ Calificación guardada con éxito.")
                                 st.rerun()
                     else:
-                        st.warning("⚠️ Las carpetas encontradas no corresponden a alumnos registrados en la base de datos.")
+                        st.warning("⚠️ No hay alumnos registrados para esta entrega.")
                 else:
                     st.info("Aún no se registran entregas de ningún alumno para esta actividad.")
             else:
@@ -245,7 +244,7 @@ elif user_sesion == "admin":
                 clean_asig = nueva_asig.strip().replace(" ", "_")
                 extension = imagen_portada.name.split(".")[-1]
                 if enviar_archivo(f"{clean_asig}/.gitkeep", b"", "Alta") and enviar_archivo(f"{clean_asig}/portada_curso.{extension}", imagen_portada.getvalue(), "Portada"):
-                    st.success(f"✔️ Asignatura '{nueva_asig}' creada correctamente con su portada.")
+                    st.success(f"✔️ Asignatura '{nueva_asig}' creada correctamente.")
                     st.rerun()
 
 # -------------------------------------------------------------------------
@@ -284,7 +283,7 @@ else:
                                 st.session_state["curso_activo"] = asig
                                 st.rerun()
             else:
-                st.info("No hay asignaturas disponibles en el aula virtual.")
+                st.info("No hay asignaturas disponibles.")
         else:
             asig_actual = st.session_state["curso_activo"]
             if st.button("⬅️ Volver a mis asignaturas"):
@@ -379,16 +378,19 @@ else:
         else:
             st.info("No hay plazos agendados.")
 
-    # --- PESTAÑA 3: EXPEDIENTE ESCOLAR PRIVADO ---
+    # --- PESTAÑA 3: EXPEDIENTE PRIVADO ACTUALIZADO (CORREGIDO CORRESPONDENCIA DE RUTAS) ---
     with pestana_boletin:
         st.markdown(f"<h3 style='color:#1e3a8a;'>📋 Expediente y Notas de {nombre_pantalla_alumno}</h3>", unsafe_allow_html=True)
-        st.write("Historial oficial de evaluaciones cargadas de forma privada:")
+        st.write("Historial oficial de evaluaciones cargadas por tu profesora:")
         st.write("---")
         
-        asignaturas_totales = listar_directorios()
+        # Obtenemos la lista real de todas las asignaturas creadas en tu GitHub
+        url_raiz_global = api_git("")
+        asignaturas_totales = [item["name"] for item in url_raiz_global if item["type"] == "dir" and item["name"] != "Entregas_Globales"]
         hubo_registros = False
         
         for asig in asignaturas_totales:
+            # Sincronizamos la ruta de lectura: Buscamos dentro de 'Entregas_Globales/Nombre_Asignatura'
             entregas_asig = api_git(f"Entregas_Globales/{asig}")
             if isinstance(entregas_asig, list):
                 for task_folder in entregas_asig:
@@ -404,10 +406,10 @@ else:
                             
                             st.markdown(f"""
                                 <div class='grade-box'>
-                                    <h4 style='margin:0; color:#1e3a8a;'>📚 {asig.replace('_',' ')} — Actividad: {nombre_t_limpio}</h4>
+                                    <h4 style='margin:0; color:#1e3a8a;'>📚 Materia: {asig.replace('_',' ')} — Actividad: {nombre_t_limpio}</h4>
                                     <p style='margin:8px 0 4px 0;'><b>Nota Oficial:</b> <span style='font-size:16px; color:#16a34a; font-weight:700;'>{data_nota['nota']}</span></p>
                                     <p style='margin:0; color:#475569;'><b>Comentarios y Feedback Docente:</b><br><i>{data_nota['feedback']}</i></p>
                                 </div>
                             """, unsafe_allow_html=True)
         if not hubo_registros:
-            st.info("Aún no se registran tareas evaluadas en tu expediente digital.")
+            st.info("Aún no se registran tareas corregidas en tu expediente digital.")
