@@ -5,146 +5,53 @@ import json
 from datetime import datetime
 
 # =========================================================================
-# 1. IDENTIDAD VISUAL PREMIUM: CSS DE ALTO IMPACTO PARA INSTI/COLEGIO
+# 1. DISEÑO ESTÉTICO REVOLUCIONARIO: COLORES, VIDA Y BALANCE VISUAL
 # =========================================================================
 st.set_page_config(page_title="Aula Virtual - Campus Escolar", layout="wide")
 
+# Inyección de estilos CSS globales para fondos, botones del instituto y textos
 st.markdown("""
     <style>
-    /* Importar tipografía moderna */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-    
-    * { font-family: 'Poppins', sans-serif; }
-    
-    /* Fondo general estilo Campus Moderno */
+    /* Fondo general del campus con un tono azulado muy limpio */
     .main { background-color: #f0f4f8; }
     
-    /* Gran Banner Institucional Principal */
-    .school-header {
-        background: linear-gradient(135px, #1e3a8a 0%, #3b82f6 100%);
-        color: white;
-        padding: 40px;
-        border-radius: 16px;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 25px rgba(30, 58, 138, 0.15);
-        border-bottom: 5px solid #f59e0b;
-        position: relative;
-        overflow: hidden;
+    /* Forzar que los títulos de Streamlit tengan fuentes escolares atractivas */
+    h1, h2, h3, h4 {
+        font-family: 'Comic Sans MS', 'Segoe UI', sans-serif !important;
+        font-weight: bold !important;
     }
     
-    /* Contenedor Mosaico de Asignaturas */
-    .subject-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 25px;
-        margin-top: 20px;
+    /* Botones de las asignaturas estilizados y con colores vivos */
+    div.stButton > button {
+        background: linear-gradient(135px, #3b82f6 0%, #1d4ed8 100%) !important;
+        color: white !important;
+        border-radius: 20px !important;
+        border: none !important;
+        padding: 10px 24px !important;
+        font-weight: bold !important;
+        width: 100% !important;
+        box-shadow: 0 4px 6px rgba(29, 78, 216, 0.2) !important;
+        transition: all 0.3s ease !important;
+    }
+    div.stButton > button:hover {
+        transform: scale(1.03) !important;
+        box-shadow: 0 6px 12px rgba(29, 78, 216, 0.3) !important;
     }
     
-    /* Tarjetas de Asignaturas con Portadas Vivas */
-    .subject-card {
-        background-color: white;
-        border-radius: 14px;
-        width: 330px;
-        min-height: 220px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        border: 1px solid #e2e8f0;
-    }
-    .subject-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 24px rgba(0,0,0,0.12);
-    }
-    
-    /* Portadas con colores degradados vivos de instituto */
-    .banner-math { background: linear-gradient(135px, #ec4899 0%, #f43f5e 100%); }
-    .banner-science { background: linear-gradient(135px, #10b981 0%, #059669 100%); }
-    .banner-tech { background: linear-gradient(135px, #8b5cf6 0%, #6d28d9 100%); }
-    .banner-default { background: linear-gradient(135px, #3b82f6 0%, #1d4ed8 100%); }
-    
-    .card-banner {
-        color: white;
-        padding: 20px;
-        min-height: 110px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-    .card-body {
-        padding: 20px;
-        background-color: white;
-        color: #475569;
-        font-size: 14px;
-    }
-
-    /* Filas Escolares para Materiales y Tareas */
-    .classwork-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 24px;
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-    .classwork-item:hover { 
+    /* Elementos decorativos dentro de los expanders correlativos */
+    .item-doc {
+        padding: 10px;
         background-color: #f8fafc;
-        border-color: #cbd5e1;
+        border-radius: 8px;
+        border-left: 5px solid #10b981;
+        margin-bottom: 8px;
     }
-    
-    /* Badges de Colores Llamativos */
-    .badge-task {
-        background-color: #fee2e2;
-        color: #dc2626;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        border: 1px solid #fca5a5;
-    }
-    .badge-material {
-        background-color: #d1fae5;
-        color: #065f46;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        border: 1px solid #6ee7b7;
-    }
-    
-    /* Bloques Estilizados del Calendario */
-    .cal-card-auto {
-        background: linear-gradient(to right, #eff6ff, #dbeafe);
-        border-left: 6px solid #3b82f6;
-        padding: 16px;
-        border-radius: 10px;
-        margin-bottom: 12px;
-        color: #1e40af;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-    }
-    .cal-card-manual {
-        background: linear-gradient(to right, #fffdf5, #fef3c7);
-        border-left: 6px solid #f59e0b;
-        padding: 16px;
-        border-radius: 10px;
-        margin-bottom: 12px;
-        color: #92400e;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-    }
-    
-    /* Cajas de notas corregidas */
-    .grade-card {
-        background: linear-gradient(to right, #f0fdf4, #dcfce7);
-        border: 1px solid #bbf7d0;
-        border-left: 6px solid #16a34a;
-        padding: 20px;
-        border-radius: 12px;
-        color: #14532d;
-        margin-bottom: 12px;
+    .item-tarea {
+        padding: 10px;
+        background-color: #fff5f5;
+        border-radius: 8px;
+        border-left: 5px solid #ef4444;
+        margin-bottom: 8px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -156,7 +63,7 @@ RAMA = "MATEMATICAS"
 TOKEN_GITHUB = st.secrets["TOKEN_GITHUB"]
 
 # =========================================================================
-# 2. CORE: SISTEMA DE COMUNICACIÓN CON LA API DE GITHUB
+# 2. CORE: CONECTIVIDAD INVISIBLE (MANTIENE LA UTILIDAD SIN TOCARLA)
 # =========================================================================
 def api_git(ruta="", metodo="GET", datos=None):
     url = f"https://api.github.com/repos/{USUARIO_GIT}/{REPOSITORIO_GIT}/contents/{ruta}?ref={RAMA}"
@@ -183,95 +90,105 @@ def listar_directorios(ruta=""):
         return [item["name"] for item in res if item["type"] == "dir" and item["name"] not in ["Entregas_Globales"]]
     return []
 
-# Inicializador de estado
 if "curso_activo" not in st.session_state:
     st.session_state["curso_activo"] = None
 
 # =========================================================================
-# 3. INTERFAZ LATERAL: MENÚ DESPLEGABLE VERTICAL GLOBAL (SIDEBAR)
+# 3. MENÚ DESPLEGABLE VERTICAL GLOBAL (SIDEBAR ESTILIZADA)
 # =========================================================================
-st.sidebar.markdown("<h2 style='text-align: center; color: #1e3a8a;'>🏫 Menú Escolar</h2>", unsafe_allow_html=True)
+st.sidebar.markdown("<h1 style='text-align: center; color: #1e3a8a; font-size: 28px;'>🏫 Menú Escolar</h1>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='text-align: center; color: #64748b; font-size: 13px;'>Instituto / Colegio Virtual</p>", unsafe_allow_html=True)
 st.sidebar.write("---")
+
 navegacion = st.sidebar.radio("Navegación del Campus:", [
     "📚 Mis Asignaturas",
     "📅 Calendario de Entregas",
     "👩‍🏫 Panel de Gestión Docente"
 ])
 
-# Reseteo del curso activo si salimos de la sección
 if navegacion != "📚 Mis Asignaturas":
     st.session_state["curso_activo"] = None
 
 # -------------------------------------------------------------------------
-# SECCIÓN A: EXPLORADOR VISUAL DE ASIGNATURAS (CON PORTADAS CON COLOR)
+# VISTA A: MIS ASIGNATURAS (REDISEÑO VISUAL ABSOLUTO)
 # -------------------------------------------------------------------------
 if navegacion == "📚 Mis Asignaturas":
     
-    # 🏠 CASO 1: VISTA DE LAS TARJETAS CON PORTADA DE COLORES VIVOS
+    # 🏠 CASO 1: LA PORTADA PRINCIPAL (CON TITULOS REALES Y COLOR)
     if st.session_state["curso_activo"] is None:
-        st.markdown("""
-            <div class='school-header'>
-                <h1 style='margin:0; font-size:32px; font-weight:700;'>🏫 Campus Digital — Centro Educativo</h1>
-                <p style='margin:8px 0 0 0; font-size:16px; opacity:0.9;'>Bienvenido a tu plataforma escolar. Selecciona una de tus asignaturas activas.</p>
-            </div>
-        """, unsafe_allow_html=True)
+        
+        # Corregido el banner gigante vacío de la imagen image_89791f.png usando st.container nativo con color
+        with st.container(border=True):
+            st.markdown("<h1 style='color: #1e3a8a; margin: 0; font-size: 36px;'>🏫 Aula Virtual — Centro Educativo</h1>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #4b5563; font-size: 16px; margin-top: 5px;'>¡Bienvenido de nuevo! Selecciona una de tus asignaturas para ver el tablón y los temas del curso.</p>", unsafe_allow_html=True)
+        
+        st.write("")
+        st.write("")
         
         asignaturas = listar_directorios()
         
         if asignaturas:
-            st.markdown("<div class='subject-container'>", unsafe_allow_html=True)
             cols = st.columns(3)
-            
             for idx, asig in enumerate(asignaturas):
-                # Asignar dinámicamente un degradado de color según el nombre
-                nombre_lower = asig.lower()
-                if "matematica" in nombre_lower:
-                    clase_banner = "banner-math"
-                    icono = "📐"
-                elif "ciencia" in nombre_lower or "fisica" in nombre_lower or "quimica" in nombre_lower:
-                    clase_banner = "banner-science"
-                    icono = "🔬"
-                elif "tecnologia" in nombre_lower or "informatica" in nombre_lower:
-                    clase_banner = "banner-tech"
-                    icono = "💻"
-                else:
-                    clase_banner = "banner-default"
-                    icono = "📘"
-                
                 with cols[idx % 3]:
-                    st.markdown(f"""
-                        <div class='subject-card'>
-                            <div class='card-banner {clase_banner}'>
-                                <span style='font-size: 32px;'>{icono}</span>
-                                <h3 style='margin:0; font-size:20px; font-weight:600; color:white;'>{asig.replace('_', ' ')}</h3>
+                    
+                    # Filtramos el nombre para aplicar portadas escolares con colores vivos y temáticos
+                    nombre_lower = asig.lower()
+                    if "matematica" in nombre_lower or "funciones" in nombre_lower:
+                        color_fondo = "#fce7f3"  # Fondo rosa chicle alegre
+                        color_borde = "#ec4899"  # Borde rosa fuerte
+                        color_texto = "#9d174d"  # Texto oscuro
+                        icono = "📐"
+                        imagen_subtitulo = "Álgebra, Cálculo y Geometría"
+                    elif "ciencia" in nombre_lower or "fisica" in nombre_lower or "quimica" in nombre_lower:
+                        color_fondo = "#d1fae5"  # Fondo verde menta
+                        color_borde = "#10b981"  # Borde verde
+                        color_texto = "#065f46"  # Texto oscuro
+                        icono = "🔬"
+                        imagen_subtitulo = "Laboratorio y Experimentación"
+                    elif "tarea" in nombre_lower:
+                        color_fondo = "#ffedd5"  # Fondo naranja suave
+                        color_borde = "#f97316"  # Borde naranja
+                        color_texto = "#9a3412"  # Texto oscuro
+                        icono = "📂"
+                        imagen_subtitulo = "Buzón de Entregas Alumnos"
+                    else:
+                        color_fondo = "#e0f2fe"  # Fondo azul cielo
+                        color_borde = "#3b82f6"  # Borde azul
+                        color_texto = "#1e40af"  # Texto oscuro
+                        icono = "📘"
+                        imagen_subtitulo = "Curso General Formativo"
+                    
+                    # Creamos la portada con un contenedor nativo estilizado por colores
+                    with st.container(border=True):
+                        st.markdown(f"""
+                            <div style='background-color: {color_fondo}; border: 2px solid {color_borde}; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 15px;'>
+                                <span style='font-size: 50px;'>{icono}</span>
+                                <h3 style='color: {color_texto}; margin: 10px 0 0 0; font-size: 20px;'>{asig.replace('_', ' ')}</h3>
+                                <p style='color: {color_texto}; opacity: 0.8; font-size: 13px; margin: 5px 0 0 0;'>{imagen_subtitulo}</p>
                             </div>
-                            <div class='card-body'>
-                                🏛️ <b>Curso Escolar Activo</b><br>
-                                <span style='font-size:12px; color:#64748b;'>Haz clic abajo para desplegar el temario secuencial.</span>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    if st.button(f"Entrar al Aula de {asig.replace('_', ' ')}", key=f"entrar_{asig}"):
-                        st.session_state["curso_activo"] = asig
-                        st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
+                        
+                        # El botón de acción integrado de forma perfecta justo debajo de la portada a color
+                        if st.button(f"Entrar a la Clase", key=f"btn_{asig}"):
+                            st.session_state["curso_activo"] = asig
+                            st.rerun()
         else:
-            st.info("El centro educativo aún no ha registrado ninguna asignatura en el sistema.")
+            st.info("No hay asignaturas creadas en el sistema educativo todavía.")
 
-    # 📖 CASO 2: INTERIOR DE LA MATERIA (TEMAS CORRELATIVOS VERTICALES)
+    # 📖 CASO 2: EL INTERIOR DEL CURSO (TEMAS VERTICALES DE COLEGIO)
     else:
         asig_actual = st.session_state["curso_activo"]
         
-        if st.button("⬅️ Volver al Panel de Asignaturas"):
+        if st.button("⬅️ Volver a las Asignaturas"):
             st.session_state["curso_activo"] = None
             st.rerun()
             
-        st.markdown(f"""
-            <div style='background: linear-gradient(135px, #0f172a 0%, #1e293b 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; border-bottom: 4px solid #10b981;'>
-                <h1 style='margin:0; font-size:26px;'>📘 Aula de Recursos: {asig_actual.replace('_', ' ')}</h1>
-                <p style='margin:4px 0 0 0; opacity:0.8; font-size:14px;'>Estructura Curricular — Unidades Temáticas Correlativas</p>
-            </div>
-        """, unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown(f"<h1 style='color: #2563eb; margin: 0;'>📘 Aula: {asig_actual.replace('_', ' ')}</h1>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #4b5563; font-size: 14px; margin: 5px 0 0 0;'>Unidades didácticas organizadas de forma secuencial y correlativa para el alumno.</p>", unsafe_allow_html=True)
+        
+        st.write("---")
         
         temas = listar_directorios(asig_actual)
         if temas:
@@ -290,25 +207,20 @@ if navegacion == "📚 Mis Asignaturas":
                                 t_nombre = partes[2].replace("_", " ").split(".")[0] if len(partes) > 2 else "Tarea"
                                 
                                 st.markdown(f"""
-                                    <div class='classwork-item' style='border-left: 5px solid #ef4444;'>
-                                        <div>
-                                            <span class='badge-task'>📋 Actividad Obligatoria</span>
-                                            <b style='margin-left:12px; color:#1e293b; font-size:15px;'>{t_nombre}</b>
-                                        </div>
-                                        <div>
-                                            <span style='font-size:13px; color:#64748b; margin-right:15px;'>Plazo límite: <b>{f_limite}</b></span>
-                                            <a href='{el['download_url']}' target='_blank' style='color:#3b82f6; font-weight:600; text-decoration:none;'>📥 Ver Enunciado</a>
-                                        </div>
+                                    <div class='item-tarea'>
+                                        <span style='background-color: #ef4444; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;'>OBLIGATORIO</span>
+                                        <b style='margin-left: 10px;'>📋 {t_nombre}</b> — <span style='font-size: 12px; color: #b91c1c;'>Fecha límite: {f_limite}</span>
+                                        <span style='float: right;'><a href='{el['download_url']}' target='_blank' style='color: #dc2626; font-weight: bold; text-decoration: none;'>📥 Descargar Ficha</a></span>
                                     </div>
                                 """, unsafe_allow_html=True)
                                 
-                                # Formulario Escolar integrado de entrega
+                                # Formulario dentro del expander
                                 with st.form(f"f_entrega_{el['name']}", clear_on_submit=True):
-                                    st.markdown("📬 **Entrega tu archivo de ejercicios resueltos:**")
-                                    nombre_al = st.text_input("Apellidos y Nombre del Alumno:")
-                                    archivo_al = st.file_uploader("Adjunta tu trabajo finalizado (PDF o Imagen):", type=["pdf","png","jpg","jpeg"])
+                                    st.markdown("🔒 **Zona de Entrega de Tarea para el Alumno:**")
+                                    nombre_al = st.text_input("Apellidos y Nombre completo del estudiante:")
+                                    archivo_al = st.file_uploader("Adjunta tu boletín completado (PDF o Imagen):", type=["pdf","png","jpg","jpeg"])
                                     
-                                    if st.form_submit_button("Enviar Ejercicio al Profesorado"):
+                                    if st.form_submit_button("Subir Ejercicio Completado"):
                                         if nombre_al and archivo_al:
                                             id_al = nombre_al.strip().replace(" ", "_")
                                             id_tar = el["name"].split(".")[0]
@@ -317,41 +229,33 @@ if navegacion == "📚 Mis Asignaturas":
                                             ruta_json = f"Entregas_Globales/{asig_actual}/{id_tar}/{id_al}/nota.json"
                                             meta = {"nota": "Sin calificar", "feedback": "Pendiente de revisión.", "fecha": datetime.now().strftime("%d/%m/%Y")}
                                             
-                                            with st.spinner("Subiendo archivo al servidor de secretaría..."):
-                                                if enviar_archivo(ruta_file, archivo_al.getvalue(), "Entrega") and enviar_archivo(ruta_json, json.dumps(meta).encode("utf-8"), "Meta"):
-                                                    st.success(f"✔️ ¡Excelente! El documento '{archivo_al.name}' ha sido entregado correctamente. Se ha notificado al profesorado.")
-                                        else:
-                                            st.warning("Completa tu nombre y adjunta un archivo antes de enviar.")
+                                            if enviar_archivo(ruta_file, archivo_al.getvalue(), "Entrega") and enviar_archivo(ruta_json, json.dumps(meta).encode("utf-8"), "Meta"):
+                                                st.success(f"✔️ ¡Felicidades! Tu documento '{archivo_al.name}' ha sido entregado en secretaría virtual de forma correcta.")
                             else:
                                 nombre_mat = el["name"].replace("_", " ").split(".")[0]
                                 st.markdown(f"""
-                                    <div class='classwork-item' style='border-left: 5px solid #10b981;'>
-                                        <div>
-                                            <span class='badge-material'>📖 Material Didáctico</span>
-                                            <b style='margin-left:12px; color:#1e293b; font-size:15px;'>{nombre_mat}</b>
-                                        </div>
-                                        <div>
-                                            <a href='{el['download_url']}' target='_blank' style='color:#3b82f6; font-weight:600; text-decoration:none;'>📥 Descargar Apuntes</a>
-                                        </div>
+                                    <div class='item-doc'>
+                                        <span style='background-color: #10b981; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;'>APUNTES</span>
+                                        <b style='margin-left: 10px;'>📖 {nombre_mat}</b>
+                                        <span style='float: right;'><a href='{el['download_url']}' target='_blank' style='color: #047857; font-weight: bold; text-decoration: none;'>📥 Descargar Material</a></span>
                                     </div>
                                 """, unsafe_allow_html=True)
                     else:
-                        st.info("Esta unidad temática aún no contiene materiales publicados.")
+                        st.info("Esta carpeta temática no tiene documentos publicados todavía.")
         else:
-            st.info("No hay bloques temáticos dados de alta en esta asignatura.")
+            st.info("No se han registrado unidades de estudio en este curso.")
 
 # -------------------------------------------------------------------------
-# SECCIÓN B: CALENDARIO GLOBAL ESCOLAR
+# VISTA B: CALENDARIO DE ENTREGAS
 # -------------------------------------------------------------------------
 elif navegacion == "📅 Calendario de Entregas":
-    st.title("📅 Calendario y Agenda de Tareas del Campus")
-    st.write("Mantén tus asignaciones académicas al día consultando las fechas asignadas automáticamente.")
+    st.title("📅 Calendario Escolar y Agenda")
     st.write("---")
     
     col_c1, col_c2 = st.columns([2, 1])
     
     with col_c1:
-        st.markdown("<h4 style='color:#1e3a8a;'>📆 Entregas Obligatorias Programadas</h4>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #1e3a8a;'>📆 Fechas Oficiales de Exámenes y Tareas</h3>", unsafe_allow_html=True)
         todas_asig = listar_directorios()
         tareas_totales = False
         
@@ -369,58 +273,54 @@ elif navegacion == "📅 Calendario de Entregas":
                             
                             st.markdown(f"""
                                 <div class='cal-card-auto'>
-                                    <span style='font-size:13px; font-weight:600; text-transform:uppercase;'>📌 Fecha de entrega: {f_limite}</span><br>
-                                    <span style='font-size:16px; font-weight:700;'>Actividad: {t_nombre}</span> <br>
-                                    <small>Asignatura: {asig.replace('_',' ')}</small>
+                                    <b>⏰ LÍMITE: {f_limite}</b> — 📋 Actividad: <u>{t_nombre}</u> en la materia {asig.replace('_',' ')}
                                 </div>
                             """, unsafe_allow_html=True)
         if not tareas_totales:
-            st.info("¡Estás al día! No hay actividades obligatorias agendadas.")
+            st.info("¡Estás al día! No hay tareas programadas en el calendario escolar.")
             
     with col_c2:
-        st.markdown("<h4 style='color:#1e3a8a;'>✏️ Mi Planificador Personal</h4>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #1e3a8a;'>📌 Mis Notas Rápidas</h3>", unsafe_allow_html=True)
         if "notas_personales" not in st.session_state:
             st.session_state["notas_personales"] = []
             
         with st.form("form_nota_rapida", clear_on_submit=True):
-            rec = st.text_input("Añadir recordatorio personal:")
-            f_rec = st.date_input("Día fijado:")
-            if st.form_submit_button("Añadir a mi Agenda"):
+            rec = st.text_input("Añadir recordatorio:")
+            f_rec = st.date_input("Para el día:")
+            if st.form_submit_button("Guardar"):
                 if rec:
                     st.session_state["notas_personales"].append({"nota": rec, "fecha": str(f_rec)})
-                    st.toast("Recordatorio guardado con éxito.")
                     st.rerun()
                     
         for r in st.session_state["notas_personales"]:
-            st.markdown(f"<div class='cal-card-manual'><b>⏱️ {r['fecha']}</b><br>📌 {r['nota']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='cal-card-manual'><b>⏱️ {r['fecha']}</b><br>{r['nota']}</div>", unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------
-# SECCIÓN C: DESPACHO PEDAGÓGICO DE GESTIÓN (DOCENTES)
+# VISTA C: GESTIÓN DOCENTE (PROFESORADO)
 # -------------------------------------------------------------------------
 elif navegacion == "👩‍🏫 Panel de Gestión Docente":
-    st.title("👩‍🏫 Despacho de Gestión y Calificaciones")
-    password = st.text_input("Código de Validación Docente:", type="password")
+    st.title("👩‍🏫 Despacho de Dirección y Profesorado")
+    password = st.text_input("Código de Validación:", type="password")
     
     if password == "profe2026":
-        st.success("🔒 Sesión de administración iniciada con éxito.")
+        st.success("🔒 Sesión administrativa autorizada.")
         st.write("---")
         
-        menu_admin = st.selectbox("Selecciona el módulo de gestión:", [
-            "🛠️ PUBLICAR TEMAS Y RECURSOS ACADÉMICOS",
-            "📥 BANDEJA DE CORRECCIÓN (Ver Respuestas Alumnos)",
-            "🏫 ALTA DE NUEVAS ASIGNATURAS"
+        menu_admin = st.selectbox("Módulo a gestionar:", [
+            "🛠️ PUBLICAR TEMAS Y RECURSOS",
+            "📥 BANDEJA DE CORRECCIÓN (Ver Respuestas)",
+            "🏫 ALTA DE ASIGNATURAS"
         ])
         
-        # --- 1. SECCIÓN DE CREAR ESTRUCTURA ---
-        if menu_admin == "🛠️ PUBLICAR TEMAS Y RECURSOS ACADÉMICOS":
+        if menu_admin == "🛠️ PUBLICAR TEMAS Y RECURSOS":
             st.subheader("Carga y Publicación Correlativa")
             asig_list = listar_directorios()
             
             if asig_list:
-                asig_sel_profe = st.selectbox("Selecciona la asignatura a gestionar:", asig_list)
-                gestion_tema = st.radio("¿Qué deseas hacer?", ["Crear una nueva unidad temática (Carpeta nueva)", "Añadir recursos a una unidad ya existente"])
+                asig_sel_profe = st.selectbox("Selecciona asignatura:", asig_list)
+                gestion_tema = st.radio("Acción:", ["Crear una carpeta/tema nuevo", "Añadir recursos a un tema existente"])
                 
-                if gestion_tema == "Crear una nueva unidad temática (Carpeta nueva)":
+                if gestion_tema == "Crear una carpeta/tema nuevo":
                     nombre_t = st.text_input("Nombre de la unidad (Ej: Tema 2 Derivadas):")
                     tema_ruta_final = nombre_t.strip().replace(" ", "_")
                 else:
@@ -428,38 +328,35 @@ elif navegacion == "👩‍🏫 Panel de Gestión Docente":
                     tema_ruta_final = st.selectbox("Elige el tema:", temas_ex) if temas_ex else None
                     
                 if tema_ruta_final:
-                    tipo_archivo = st.radio("Clasificación del Recurso Escolar:", ["📖 Material Formativo (Apuntes, PDF)", "📋 Tarea Evaluante (Con entrega y fecha)"])
+                    tipo_archivo = st.radio("Tipo de Recurso:", ["📖 Material (Apuntes, PDF)", "📋 Tarea (Para entregar con fecha)"])
                     
-                    if tipo_archivo == "📋 Tarea Evaluante (Con entrega y fecha)":
-                        f_limite_p = st.date_input("Fijar fecha de vencimiento escolar:")
-                        fichero_p = st.file_uploader("Adjunta el archivo del enunciado para los estudiantes:")
+                    if tipo_archivo == "📋 Tarea (Para entregar con fecha)":
+                        f_limite_p = st.date_input("Fijar vencimiento escolar:")
+                        fichero_p = st.file_uploader("Adjunta el archivo del enunciado:")
                         
                         if st.button("🚀 Publicar Tarea de forma Oficial") and fichero_p:
                             nombre_archivo_git = f"TAREA_{str(f_limite_p)}_{fichero_p.name.replace(' ', '_')}"
-                            ruta_completa = f"{asig_sel_profe}/{tema_ruta_final}/{nombre_archivo_git}"
+                            ruta_complete = f"{asig_sel_profe}/{tema_ruta_final}/{nombre_archivo_git}"
                             
-                            with st.spinner("Subiendo tarea al servidor central..."):
+                            with st.spinner("Subiendo tarea..."):
                                 enviar_archivo(f"{asig_sel_profe}/{tema_ruta_final}/.gitkeep", b"", "Init")
-                                if enviar_archivo(ruta_completa, fichero_p.getvalue(), "Carga"):
-                                    st.success(f"✔️ ¡Proceso completado! La carpeta/tema '{tema_ruta_final.replace('_',' ')}' se ha actualizado. Archivo de tarea '{fichero_p.name}' subido con éxito y fecha fijada en el calendario.")
+                                if enviar_archivo(ruta_complete, fichero_p.getvalue(), "Carga"):
+                                    st.success(f"✔️ ¡Acción completada! El Tema '{tema_ruta_final.replace('_',' ')}' ha sido actualizado con éxito y la Tarea '{fichero_p.name}' ya es visible.")
                                     st.rerun()
                     else:
-                        fichero_p = st.file_uploader("Adjunta los apuntes o guías académicas:")
+                        fichero_p = st.file_uploader("Adjunta los apuntes o guías:")
                         if st.button("🚀 Publicar Material Didáctico") and fichero_p:
                             nombre_archivo_git = fichero_p.name.replace(' ', '_')
-                            ruta_completa = f"{asig_sel_profe}/{tema_ruta_final}/{nombre_archivo_git}"
+                            ruta_complete = f"{asig_sel_profe}/{tema_ruta_final}/{nombre_archivo_git}"
                             
-                            with st.spinner("Subiendo material didáctico..."):
+                            with st.spinner("Subiendo apuntes..."):
                                 enviar_archivo(f"{asig_sel_profe}/{tema_ruta_final}/.gitkeep", b"", "Init")
-                                if enviar_archivo(ruta_completa, fichero_p.getvalue(), "Carga"):
-                                    st.success(f"✔️ ¡Proceso completado! El Material docente '{fichero_p.name}' ha sido inyectado con éxito en el Tema '{tema_ruta_final.replace('_',' ')}'.")
+                                if enviar_archivo(ruta_complete, fichero_p.getvalue(), "Carga"):
+                                    st.success(f"✔️ ¡Acción completada! El Material docente '{fichero_p.name}' ha sido inyectado con éxito.")
                                     st.rerun()
-            else:
-                st.warning("Debes dar de alta una asignatura primero.")
 
-        # --- 2. SECCIÓN DE CORREGIR TAREAS INTEGRADAS ---
-        elif menu_admin == "📥 BANDEJA DE CORRECCIÓN (Ver Respuestas Alumnos)":
-            st.subheader("Bandeja de Entrada de Ejercicios")
+        elif menu_admin == "📥 BANDEJA DE CORRECCIÓN (Ver Respuestas)":
+            st.subheader("Revisión de Ejercicios Entregados")
             asig_list = listar_directorios()
             
             if asig_list:
@@ -468,12 +365,12 @@ elif navegacion == "👩‍🏫 Panel de Gestión Docente":
                 carpetas_tareas = [c["name"] for c in entregas_raiz if c["type"] == "dir"]
                 
                 if carpetas_tareas:
-                    tarea_eval = st.selectbox("Selecciona la Tarea que deseas evaluar:", carpetas_tareas)
+                    tarea_eval = st.selectbox("Selecciona la Tarea:", carpetas_tareas)
                     alumnos_lista = api_git(f"Entregas_Globales/{asig_eval}/{tarea_eval}")
                     id_alumnos = [a["name"] for a in alumnos_lista if a["type"] == "dir"]
                     
                     if id_alumnos:
-                        alumno_eval = st.selectbox("Selecciona el alumno a calificar:", id_alumnos)
+                        alumno_eval = st.selectbox("Selecciona el alumno:", id_alumnos)
                         archivos_f = api_git(f"Entregas_Globales/{asig_eval}/{tarea_eval}/{alumno_eval}")
                         
                         url_doc, name_doc = "", ""
@@ -492,10 +389,10 @@ elif navegacion == "👩‍🏫 Panel de Gestión Docente":
                                 feedback_v = res_d.json().get("feedback", "")
                                 
                         st.markdown(f"""
-                            <div style='background-color:#ffffff; border:1px solid #dadce0; padding:20px; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 6px rgba(0,0,0,0.02);'>
+                            <div style='background-color:#ffffff; border:1px solid #dadce0; padding:20px; border-radius:12px; margin-bottom:15px;'>
                                 👤 <b>Estudiante evaluado:</b> {alumno_eval.replace('_',' ')}<br>
-                                📄 <b>Archivo de solución enviado:</b> {name_doc.replace('_',' ')}<br><br>
-                                <a href='{url_doc}' target='_blank'><button style='background-color:#3b82f6; color:white; border:none; padding:10px 18px; border-radius:6px; font-weight:600; cursor:pointer;'>📥 Descargar trabajo entregado</button></a>
+                                📄 <b>Archivo enviado:</b> {name_doc.replace('_',' ')}<br><br>
+                                <a href='{url_doc}' target='_blank'><button style='background-color:#3b82f6; color:white; border:none; padding:10px 18px; border-radius:6px; font-weight:bold; cursor:pointer;'>📥 Descargar trabajo entregado</button></a>
                             </div>
                         """, unsafe_allow_html=True)
                         
@@ -503,27 +400,20 @@ elif navegacion == "👩‍🏫 Panel de Gestión Docente":
                         with col_e1:
                             input_n = st.text_input("Calificación final:", value=str(nota_v))
                         with col_e2:
-                            input_f = st.text_area("Comentarios pedagógicos (Feedback):", value=feedback_v)
+                            input_f = st.text_area("Feedback pedagógico:", value=feedback_v)
                             
-                        if st.button("💾 Publicar Nota en el Expediente"):
+                        if st.button("💾 Publicar Nota"):
                             nueva_data = {"nota": input_n, "feedback": input_f, "fecha": datetime.now().strftime("%d/%m/%Y")}
                             if enviar_archivo(ruta_json_nota, json.dumps(nueva_data).encode("utf-8"), "Nota guardada"):
-                                st.success(f"✔️ ¡Calificación guardada! La nota del alumno '{alumno_eval.replace('_',' ')}' ha sido registrada correctamente en el boletín privado.")
+                                st.success(f"✔️ Calificación del alumno '{alumno_eval.replace('_',' ')}' registrada correctamente.")
                                 st.rerun()
-                    else:
-                        st.warning("No hay entregas para esta tarea.")
-                else:
-                    st.info("No hay histórico de tareas entregadas en esta asignatura.")
-            else:
-                st.warning("No hay asignaturas configuradas.")
 
-        # --- 3. SECCIÓN DE ASIGNATURAS NUEVAS ---
         elif menu_admin == "🏫 CREAR NUEVA ASIGNATURA":
-            st.subheader("Alta de Clases y Asignaturas")
-            nueva_asig = st.text_input("Nombre de la nueva Asignatura (Ej: Matematicas 1º Bach):")
-            if st.button("Consolidar en el Sistema Central"):
+            st.subheader("Alta de Clases")
+            nueva_asig = st.text_input("Nombre de la asignatura (Ej: Historia 1º Bach):")
+            if st.button("Consolidar en el Registro Central"):
                 if nueva_asig:
                     clean_asig = nueva_asig.strip().replace(" ", "_")
                     if enviar_archivo(f"{clean_asig}/.gitkeep", b"", "Alta"):
-                        st.success(f"✔️ ¡Éxito! La asignatura '{nueva_asig}' ha sido creada y guardada correctamente en el registro central escolar.")
+                        st.success(f"✔️ ¡Éxito! La asignatura '{nueva_asig}' ha sido creada correctamente.")
                         st.rerun()
