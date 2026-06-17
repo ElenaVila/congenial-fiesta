@@ -220,14 +220,22 @@ elif user_sesion == "admin":
                             </div>
                         """, unsafe_allow_html=True)
                         
-                        input_n = st.text_input("Calificación oficial:", value=str(nota_v))
-                        input_f = st.text_area("Feedback pedagógico:", value=feedback_v)
-                        
-                        if st.button("💾 Publicar Nota"):
-                            nueva_data = {"nota": input_n, "feedback": input_f, "fecha_correccion": datetime.now().strftime("%d/%m/%Y")}
-                            if enviar_archivo(ruta_json_nota, json.dumps(nueva_data).encode("utf-8"), "Nota"):
-                                st.success("✔️ Calificación guardada con éxito.")
-                                st.rerun()
+                        # CAMBIO CLAVE: Colocamos el formulario completo dentro de un bloque controlado para evitar que se pierda la acción
+                        with st.form(f"form_evaluacion_{alumno_eval_uid}"):
+                            input_n = st.text_input("Calificación oficial:", value=str(nota_v))
+                            input_f = st.text_area("Feedback pedagógico:", value=feedback_v)
+                            boton_guardar_nota = st.form_submit_button("💾 Publicar Nota")
+                            
+                            if boton_guardar_nota:
+                                nueva_data = {
+                                    "nota": input_n.strip(), 
+                                    "feedback": input_f.strip(), 
+                                    "fecha_correccion": datetime.now().strftime("%d/%m/%Y")
+                                }
+                                with st.spinner("Publicando en el expediente digital de GitHub..."):
+                                    exito_guardado = enviar_archivo(ruta_json_nota, json.dumps(nueva_data, indent=4).encode("utf-8"), f"Nota guardada para {alumno_eval_uid}")
+                                    if exito_guardado:
+                                        st.success(f"✔️ ¡Calificación publicada correctamente! El alumno ya puede verla desde su panel.")
                     else:
                         st.warning("⚠️ No hay alumnos registrados para esta entrega.")
                 else:
@@ -378,19 +386,17 @@ else:
         else:
             st.info("No hay plazos agendados.")
 
-    # --- PESTAÑA 3: EXPEDIENTE PRIVADO ACTUALIZADO (CORREGIDO CORRESPONDENCIA DE RUTAS) ---
+    # --- PESTAÑA 3: EXPEDIENTE ESCOLAR PRIVADO ---
     with pestana_boletin:
         st.markdown(f"<h3 style='color:#1e3a8a;'>📋 Expediente y Notas de {nombre_pantalla_alumno}</h3>", unsafe_allow_html=True)
         st.write("Historial oficial de evaluaciones cargadas por tu profesora:")
         st.write("---")
         
-        # Obtenemos la lista real de todas las asignaturas creadas en tu GitHub
         url_raiz_global = api_git("")
         asignaturas_totales = [item["name"] for item in url_raiz_global if item["type"] == "dir" and item["name"] != "Entregas_Globales"]
         hubo_registros = False
         
         for asig in asignaturas_totales:
-            # Sincronizamos la ruta de lectura: Buscamos dentro de 'Entregas_Globales/Nombre_Asignatura'
             entregas_asig = api_git(f"Entregas_Globales/{asig}")
             if isinstance(entregas_asig, list):
                 for task_folder in entregas_asig:
