@@ -209,7 +209,7 @@ with pestana_admin:
                         
                         col_name, col_btn = st.columns([4, 1])
                         with col_name:
-                            st.markdown(f"<div class='task-box'>📤 <b>Entrega:</b> {nombre_mostrar}</div>", unsafe_html=True)
+                            st.markdown(f"<div class='task-box'>📤 <b>Entrega:</b> {nombre_mostrar}</div>", unsafe_allow_html=True)
                         with col_btn:
                             # Botón que descarga el archivo del alumno directamente al ordenador de la profe
                             st.markdown(f"<br><a href='{f['download_url']}' target='_blank'><button style='background-color:#10b981; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer;'>📥 Descargar Archivo</button></a>", unsafe_allow_html=True)
