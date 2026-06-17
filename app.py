@@ -11,8 +11,7 @@ REPOSITORIO_GIT = "congenial-fiesta"
 RAMA = "MATEMATICAS"
 TOKEN_GITHUB = st.secrets["TOKEN_GITHUB"]
 
-# Estilos visuales más limpios y modernos
-# ASÍ DEBE QUEDAR CORREGIDO:
+# Estilos visuales más limpios y modernos (CORREGIDO AQUÍ)
 st.markdown("""
     <style>
     .main { background-color: #f8f9fa; }
@@ -25,12 +24,12 @@ st.markdown("""
     }
     .titulo { color: #1E3A8A; font-weight: bold; }
     </style>
-""", unsafe_html=True)
+""", unsafe_allow_html=True)
 
 # --- FUNCIONES DE GITHUB ---
 def obtener_archivos(ruta=""):
     url = f"https://api.github.com/repos/{USUARIO_GIT}/{REPOSITORIO_GIT}/contents/{ruta}?ref={RAMA}"
-    headers = {"Authorization": f"token {TOKEN_GITHUB}"} if TOKEN_GITHUB != "AQUÍ_PONDREMOS_TU_TOKEN" else {}
+    headers = {"Authorization": f"token {TOKEN_GITHUB}"}
     respuesta = requests.get(url, headers=headers)
     return respuesta.json() if respuesta.status_code == 200 else []
 
@@ -63,7 +62,7 @@ es_admin = st.sidebar.checkbox("Modo Administradora")
 
 if es_admin:
     password = st.sidebar.text_input("Contraseña de acceso:", type="password")
-    # Pon la contraseña que tú quieras aquí (ejemplo: "profe2026")
+    # Puedes cambiar "profe2026" por la contraseña que tú quieras
     if password == "profe2026":
         st.sidebar.success("¡Identidad confirmada!")
         
@@ -93,7 +92,7 @@ if es_admin:
                     st.sidebar.success(f"¡{archivo_subido.name} subido con éxito!")
                     st.rerun()
                 else:
-                    st.sidebar.error("Error al subir. Revisa los permisos o el Token.")
+                    st.sidebar.error("Error al subir. Revisa si configuraste bien el Secret en Streamlit.")
     elif password != "":
         st.sidebar.error("Contraseña incorrecta")
 
@@ -129,9 +128,9 @@ for item in contenido:
             st.write("") # Espaciado
             
     elif item["type"] == "file" and item["name"] not in ["app.py", "README.md", "requirements.txt"]:
-        # Archivos sueltos en la raíz
+        # Archivos sueltos en la raíz (CORREGIDO AQUÍ)
         col1, col2 = st.columns([4, 1])
         with col1:
             st.markdown(f"📄 **{item['name']}** (Raíz)")
         with col2:
-            st.markdown(f"[📥 Descargar]({item['download_url']})")(f"[Descargar archivo]({item['download_url']})")
+            st.markdown(f"[📥 Descargar]({item['download_url']})")
