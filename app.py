@@ -9,7 +9,7 @@ st.set_page_config(page_title="Aula Virtual - Elena Vila", layout="wide", initia
 USUARIO_GIT = "ElenaVila"
 REPOSITORIO_GIT = "congenial-fiesta"
 RAMA = "MATEMATICAS"
-TOKEN_GITHUB = "AQUÍ_PONDREMOS_TU_TOKEN" # Lo configuraremos en el paso 2
+TOKEN_GITHUB = st.secrets["TOKEN_GITHUB"]
 
 # Estilos visuales más limpios y modernos
 st.markdown("""
