@@ -111,8 +111,8 @@ for item in contenido:
     if item["type"] == "dir":
         # Bloque visual para las carpetas
         with st.container():
-            # ASÍ DEBE QUEDAR CORREGIDO:
-st.markdown(f"<div class='card'><h3 class='titulo'>📁 Carpeta: {item['name']}</h3></div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='card'><h3 class='titulo'>📁 Carpeta: {item['name']}</h3></div>", unsafe_allow_html=True)
+            sub_contenido = obtener_archivos(item["path"])
             
             if not sub_contenido:
                 st.text("   (Carpeta vacía temporalmente)")
@@ -129,12 +129,6 @@ st.markdown(f"<div class='card'><h3 class='titulo'>📁 Carpeta: {item['name']}<
             
     elif item["type"] == "file" and item["name"] not in ["app.py", "README.md", "requirements.txt"]:
         # Archivos sueltos en la raíz
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            st.markdown(f"📄 **{item['name']}** (Raíz)")
-        with col2:
-            st.markdown(f"[📥 Descargar]({item['download_url']})")
-        # Archivos sueltos en la raíz (CORREGIDO AQUÍ)
         col1, col2 = st.columns([4, 1])
         with col1:
             st.markdown(f"📄 **{item['name']}** (Raíz)")
